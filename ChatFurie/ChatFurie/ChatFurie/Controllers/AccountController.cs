@@ -41,7 +41,7 @@ namespace ChatFurie.Controllers
                     if (CryptService.VerifyHash(loginModel.Password, user.PasswordHash))
                     {
                         Login(loginModel, user.ID.ToString());
-                        return RedirectToAction("Index", "Chat");
+                        return RedirectToAction("Index", "Home");
                     }
             }
             return View(loginModel);
@@ -75,7 +75,7 @@ namespace ChatFurie.Controllers
                     Login = registerModel.Email,
                     Password = registerModel.Password
                 }, newUser.ID.ToString());
-                return RedirectToAction("Index", "Chat");
+                return RedirectToAction("Index", "Home");
             }
             return View(registerModel);
         }
