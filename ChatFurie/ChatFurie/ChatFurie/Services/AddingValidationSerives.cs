@@ -11,9 +11,10 @@ namespace ChatFurie.Services
     /// </summary>
     public class ValidationDate : ValidationAttribute
     {
+
         public override bool IsValid(object value)
         {
-            return (int)(DateTime.Now.Subtract((DateTime)value).TotalDays / 365) >= 18;
+            return (int)(DateTime.Now.Subtract((DateTime)value).TotalDays / 365) >= Constants.AGE;
         }
     }
 }
