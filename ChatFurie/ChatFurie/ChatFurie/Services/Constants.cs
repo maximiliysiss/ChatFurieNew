@@ -8,5 +8,7 @@ namespace ChatFurie.Services
     public class Constants
     {
         public static int AGE = 18;
+
+        public static int STRLEN = 20;
     }
 }
