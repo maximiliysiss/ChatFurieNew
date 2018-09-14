@@ -6,18 +6,15 @@ using System.Threading.Tasks;
 
 namespace ChatFurie.Models.ChatModel
 {
-    public class User
+    public class Conversation
     {
         [Key]
         public int ID { get; set; }
         public string Name { get; set; }
-        public string PasswordHash { get; set; }
-        public DateTime LastEnter { get; set; }
-        public string Login { get; set; }
-        public string Image { get; set; }
-        public string Email { get; set; }
+        public DateTime DateStart { get; set; }
+        public int CreatorID { get; set; }
+        public User Creator { get; set; }
 
-        public List<Conversation> Conversations { get; set; }
         public List<UserInConversation> UserInConversations { get; set; }
     }
 }
