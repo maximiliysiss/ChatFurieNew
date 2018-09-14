@@ -38,6 +38,29 @@ namespace ChatFurie.Migrations
                     b.ToTable("Conversation");
                 });
 
+            modelBuilder.Entity("ChatFurie.Models.ChatModel.ConversationMessage", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("AuthorID");
+
+                    b.Property<string>("Content");
+
+                    b.Property<int>("ConversationID");
+
+                    b.Property<DateTime>("DateTime");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("AuthorID");
+
+                    b.HasIndex("ConversationID");
+
+                    b.ToTable("ConversationMessages");
+                });
+
             modelBuilder.Entity("ChatFurie.Models.ChatModel.User", b =>
                 {
                     b.Property<int>("ID")
@@ -86,11 +109,45 @@ namespace ChatFurie.Migrations
                     b.ToTable("UserInConversation");
                 });
 
+            modelBuilder.Entity("ChatFurie.Models.ChatModel.UserReadMessage", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ConversationMessageID");
+
+                    b.Property<bool>("IsRead");
+
+                    b.Property<int>("UserID");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ConversationMessageID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("UserReadMessages");
+                });
+
             modelBuilder.Entity("ChatFurie.Models.ChatModel.Conversation", b =>
                 {
                     b.HasOne("ChatFurie.Models.ChatModel.User", "Creator")
                         .WithMany("Conversations")
                         .HasForeignKey("CreatorID")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ChatFurie.Models.ChatModel.ConversationMessage", b =>
+                {
+                    b.HasOne("ChatFurie.Models.ChatModel.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ChatFurie.Models.ChatModel.Conversation", "Conversation")
+                        .WithMany()
+                        .HasForeignKey("ConversationID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -103,6 +160,19 @@ namespace ChatFurie.Migrations
 
                     b.HasOne("ChatFurie.Models.ChatModel.User", "User")
                         .WithMany("UserInConversations")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ChatFurie.Models.ChatModel.UserReadMessage", b =>
+                {
+                    b.HasOne("ChatFurie.Models.ChatModel.ConversationMessage", "ConversationMessage")
+                        .WithMany()
+                        .HasForeignKey("ConversationMessageID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ChatFurie.Models.ChatModel.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
