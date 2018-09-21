@@ -16,6 +16,8 @@ namespace ChatFurie.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Conversation> Conversation { get; set; }
         public DbSet<UserInConversation> UserInConversation { get; set; }
+        public DbSet<ConversationMessage> ConversationMessages { get; set; }
+        public DbSet<UserReadMessage> UserReadMessages { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
