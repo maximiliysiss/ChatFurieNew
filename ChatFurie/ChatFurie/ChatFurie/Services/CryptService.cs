@@ -38,7 +38,7 @@ namespace ChatFurie.Services
         public static bool VerifyHash(string input, string hash)
         {
             string inputHash = GetMd5Hash(input);
-            return input == hash;
+            return inputHash == hash;
         }
     }
 }

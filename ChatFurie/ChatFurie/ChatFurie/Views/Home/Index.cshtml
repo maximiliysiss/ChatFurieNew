@@ -14,10 +14,81 @@
         <img src="~/images/condition-on.jpg" class="img10" />
     </div>
     <div class="search">
-        <input type="text" />
+        <input id="search-input" type="text" />
     </div>
-    <div class="list-output">
+    <div id="list-output" class="list-output">
     </div>
 </div>
-<div class="s-column column" style="background-color:red">
+<div class="s-column column">
+    <img style="width:100%" />
 </div>
+
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.1/js/toastr.js"></script>
+<script>
+
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": 300,
+        "hideDuration": 1000,
+        "timeOut": 5000,
+        "extendedTimeOut": 1000,
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+
+    // On Start page
+    $(function () {
+
+        // Searching conversations and friends
+        $('#search-input').keyup(function () {
+            var text = $(this).val().trim();
+            if (text.length === 0) {
+            }
+            else {
+                AjaxPost({ "find": text, "user": "@userID" },
+                    "@Url.Action("FindResult", "Home")",
+                    function (e) { $('#list-output').html(e);  });
+            }
+        });
+
+
+    });
+
+
+    function AjaxPost(data, url, success) {
+        $.ajax({
+            url: url,
+            data: data,
+            method: "POST",
+            success: success,
+            error: function (error) {
+                toastr["error"](error);
+            }
+        });
+    }
+
+    function AjaxGet(data, url, success) {
+        $.ajax({
+            url: url,
+            data: data,
+            method: "GET",
+            success: success,
+            error: function (error) {
+
+            }
+        });
+    }
+
+</script>
+
+
