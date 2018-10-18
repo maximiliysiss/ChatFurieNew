@@ -10,7 +10,7 @@ namespace ChatFurie.Models
     /// <summary>
     /// Main Context For ChatModels
     /// </summary>
-    public class ChatContext : DbContext
+    public class ChatContextWCF : DbContext
     {
 
         public DbSet<User> Users { get; set; }
