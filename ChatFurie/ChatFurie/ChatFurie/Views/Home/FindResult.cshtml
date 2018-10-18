@@ -1,0 +1,11 @@
+﻿@model List<UserSM>
+
+
+@foreach (var obj in Model)
+{
+    <div class="user-info">
+        <img src="@obj.Image" class="img40" />
+        <span>@Html.StringLengthValidate(obj.Name)</span>
+        <img src="~/images/condition-on.jpg" class="img10" />
+    </div>
+}

@@ -28,6 +28,7 @@ namespace ChatFurie.Controllers
             ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "ChatFurieLogin");
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             await HttpContext.SignInAsync(claimsPrincipal);
+            Logger.Log.Info($"Login for {loginModel.Login}");
         }
 
         [HttpPost]
@@ -35,6 +36,7 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
+                Logger.Log.Info($"Start login for {loginModel.Login}");
                 ChatContext chatContext = new ChatContext();
                 var user = chatContext.Users.Where(x => x.Login == loginModel.Login).FirstOrDefault();
                 if (user != null)
@@ -43,7 +45,9 @@ namespace ChatFurie.Controllers
                         Login(loginModel, user.ID.ToString());
                         return RedirectToAction("Index", "Home");
                     }
+                Logger.Log.Warn($"Invalid login/password");
             }
+            Logger.Log.Warn($"Invalid login {loginModel.Login}");
             return View(loginModel);
         }
 
@@ -57,6 +61,7 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
+                Logger.Log.Info($"Start register for {registerModel.Email}");
                 Models.ChatModel.User newUser = new Models.ChatModel.User
                 {
                     Email = registerModel.Email,
@@ -77,6 +82,7 @@ namespace ChatFurie.Controllers
                 }, newUser.ID.ToString());
                 return RedirectToAction("Index", "Home");
             }
+            Logger.Log.Warn($"Invalid register for {registerModel.Email}");
             return View(registerModel);
         }
     }

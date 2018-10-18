@@ -22,5 +22,13 @@ namespace ChatFurie.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult FindResult(string find, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return PartialView(chatService.FindFriends(find, user));
+        }
     }
 }
