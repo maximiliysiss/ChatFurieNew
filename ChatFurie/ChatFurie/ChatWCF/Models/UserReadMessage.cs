@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Models.ChatModel
+namespace ChatWCF.Models
 {
     public class UserReadMessage
     {

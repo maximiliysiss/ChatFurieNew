@@ -1,0 +1,68 @@
+﻿@model UserFriendSM
+
+<style>
+    .user-page {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .push {
+        margin-left: auto;
+    }
+
+    .info-element-up {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        height: 70px;
+        padding: 15px;
+        align-items: stretch;
+        padding-right: 50px;
+    }
+
+        .info-element-up > span {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 20px;
+        }
+
+        .info-element-up > .div-img {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+            .info-element-up > .div-img > img {
+                border-radius: 45px;
+            }
+
+    .action-user-page {
+        flex-direction: row-reverse;
+    }
+</style>
+
+<div class="user-page">
+    <div class="info-element-up">
+        <span class="div-img">
+            <img src="~/images/DefaultUserImg.png" class="img40" />
+        </span>
+        <span>@Model.UserSM.Name</span>
+        <span class="div-img">
+            <img src="~/images/condition-on.jpg" class="img10" />
+        </span>
+        @if (!Model.IsFriend)
+        {
+            <span class="push div-img">
+                <img id="addFriend" name="@Model.UserSM.ID" src="~/images/addIcon.jpg" class="img40 actions" />
+            </span>
+        }
+        else
+        {
+            <span class="div-img">
+                <img id="deleteFriend" name="@Model.UserSM.ID" src="~/images/deleteIcon.png" class="img40 actions" />
+            </span>
+        }
+    </div>
+</div>

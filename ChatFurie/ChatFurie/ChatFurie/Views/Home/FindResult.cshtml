@@ -3,9 +3,9 @@
 
 @foreach (var obj in Model)
 {
-    <div class="user-info">
-        <img src="@obj.Image" class="img40" />
-        <span>@Html.StringLengthValidate(obj.Name)</span>
-        <img src="~/images/condition-on.jpg" class="img10" />
+    <div class="user-info contact-find" id="@obj.ID">
+        <img id="@obj.ID" src="@obj.Image" class="img40" />
+        <span id="@obj.ID">@Html.StringLengthValidate(obj.Name)</span>
+        <img id="@obj.ID" src="~/images/condition-on.jpg" class="img10" />
     </div>
 }

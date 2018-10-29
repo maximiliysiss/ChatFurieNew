@@ -1,10 +1,11 @@
-﻿using System;
+﻿using ChatWCF.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Models.ChatModel
+namespace ChatWCF.Models
 {
     public class User
     {
@@ -19,5 +20,10 @@ namespace ChatFurie.Models.ChatModel
 
         public List<Conversation> Conversations { get; set; }
         public List<UserInConversation> UserInConversations { get; set; }
+        public List<CommonNotification> CommonNotifications { get; set; }
+        public List<AddFriendNotification> AddFriendNotificationsTo { get; set; }
+        public List<AddFriendNotification> AddFriendNotificationsFrom { get; set; }
+        public List<UserReadMessage> UserReadMessages { get; set; }
+        public List<ConversationMessage> ConversationMessages { get; set; }
     }
 }

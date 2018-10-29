@@ -9,9 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ChatFurie.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
-        [Authorize]
+
         public IActionResult Index()
         {
             return View();
@@ -23,12 +24,33 @@ namespace ChatFurie.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [Authorize]
+
         [HttpPost]
         public IActionResult FindResult(string find, int user)
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
             return PartialView(chatService.FindFriends(find, user));
+        }
+
+        [HttpPost]
+        public bool AddFriend(int user, int newFriend)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return chatService.AddFriend(user, newFriend);
+        }
+
+        [HttpPost]
+        public IActionResult GetConversations(int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return PartialView(chatService.ConversationUserList(user));
+        }
+
+        [HttpPost]
+        public IActionResult OpenContact(int user, int another)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return PartialView(chatService.GetUser(another, user));
         }
     }
 }

@@ -16,10 +16,16 @@
     <div class="search">
         <input id="search-input" type="text" />
     </div>
+    <div class="tabs-line">
+        <span name="list-output" class="tab-header tab-header-active">Conversations</span>
+        <span name="Notifications" class="tab-header">Notifications</span>
+    </div>
     <div id="list-output" class="list-output">
     </div>
+    <div id="Notifications" class="list-output" style="display:none">
+    </div>
 </div>
-<div class="s-column column">
+<div id="s-column" class="s-column column">
     <img style="width:100%" />
 </div>
 
@@ -53,14 +59,56 @@
         $('#search-input').keyup(function () {
             var text = $(this).val().trim();
             if (text.length === 0) {
+                AjaxPost({ "user": "@userID" },
+                    "@Url.Action("GetConversations", "Home")",
+                    function (e) { $('#list-output').html(e); });
             }
             else {
                 AjaxPost({ "find": text, "user": "@userID" },
                     "@Url.Action("FindResult", "Home")",
-                    function (e) { $('#list-output').html(e);  });
+                    function (e) {
+                        $('#list-output').html(e);
+                        $('.contact-find').click(function () { OpenContact($(this).attr("id")); });
+                    });
             }
         });
 
+        function OpenContact(id) {
+            AjaxPost({ "user": "@userID", "another": id },
+            "@Url.Action("OpenContact","Home")",
+            function (e) {
+                $('.s-column').html(e);
+                InitOpenContact();
+            });
+        }
+
+        function InitOpenContact() {
+            $("#deleteFriend").click(function () {
+            });
+            $("#addFriend").click(function () {
+                var nUser = $(this).attr("name");
+                AjaxPost({ "user": "@userID", "newFriend": nUser },
+                    "@Url.Action("AddFriend","Home")", function (e) {
+                        if (!e)
+                            toastr["error"]("Unreport exception");
+                        else
+                            OpenContact(nUser);
+                    });
+            });
+        }
+
+        /// Переписать под универсал!
+        $('.tab-header').click(function () {
+            var getElementActive = $('.tab-header.tab-header-active').first();
+            var idActive = $(getElementActive).attr("name");
+            var id = $(this).attr("name");
+            if (this !== getElementActive) {
+                $(this).attr("class", "tab-header tab-header-active");
+                $('#' + id).css("display", "block");
+                $(getElementActive).attr("class", "tab-header");
+                $('#' + idActive).css("display","none");
+            }
+        });
 
     });
 

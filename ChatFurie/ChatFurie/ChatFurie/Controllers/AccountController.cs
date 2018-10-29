@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 using ChatFurie.Models;
 using ChatFurie.Models.AccountModel;
 using ChatFurie.Services;
+using ChatWCF.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatFurie.Controllers
@@ -51,6 +54,13 @@ namespace ChatFurie.Controllers
             return View(loginModel);
         }
 
+        [Authorize]
+        public async Task<IActionResult> SignOut()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+
         public IActionResult Register()
         {
             return View();
@@ -62,7 +72,7 @@ namespace ChatFurie.Controllers
             if (ModelState.IsValid)
             {
                 Logger.Log.Info($"Start register for {registerModel.Email}");
-                Models.ChatModel.User newUser = new Models.ChatModel.User
+                User newUser = new User
                 {
                     Email = registerModel.Email,
                     LastEnter = DateTime.Now,

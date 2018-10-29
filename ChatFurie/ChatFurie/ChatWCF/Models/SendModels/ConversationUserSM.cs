@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Web;
-using ChatFurie.Models.ChatModel;
 
 namespace ChatWCF.Models.SendModels
 {
@@ -11,6 +10,10 @@ namespace ChatWCF.Models.SendModels
     public class ConversationUserSM : UserSM
     {
         public ConversationUserSM(User user) : base(user)
+        {
+        }
+
+        public ConversationUserSM(Conversation conversation) : base(conversation)
         {
         }
 

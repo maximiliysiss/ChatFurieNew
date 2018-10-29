@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Models.ChatModel
+namespace ChatWCF.Models
 {
     public class ConversationMessage
     {
@@ -20,5 +20,7 @@ namespace ChatFurie.Models.ChatModel
 
         public int AuthorID { get; set; }
         public User Author { get; set; }
+
+        public List<UserReadMessage> UserReadMessages { get; set; }
     }
 }
