@@ -13,15 +13,16 @@ namespace ChatWCF
 {
     public class ChatService : IChat
     {
-        public bool AcceptFriend(int user, int notif)
+        public int AcceptFriend(int user, int notif)
         {
             ChatContextWCF ChatContextWCF = new ChatContextWCF();
             var addNotif = ChatContextWCF.AddFriendNotifications.Find(notif);
             var creator = ChatContextWCF.Users.Find(addNotif.UserFromID);
             var userAdd = ChatContextWCF.Users.Find(user);
+            Conversation conversation = null;
             if (addNotif.IsDialog)
             {
-                var conversation = ChatContextWCF.Conversation.Find(addNotif.DialogID);
+                conversation = ChatContextWCF.Conversation.Find(addNotif.DialogID);
                 var userInConversation = new UserInConversation()
                 {
                     Conversation = conversation,
@@ -33,7 +34,7 @@ namespace ChatWCF
             }
             else
             {
-                var conversation = new Conversation()
+                conversation = new Conversation()
                 {
                     Creator = creator,
                     DateStart = DateTime.Now,
@@ -46,19 +47,19 @@ namespace ChatWCF
                     DateStart = DateTime.Now,
                     Name = conversation.Name,
                     User = creator
-                });
+                }).State = EntityState.Added;
                 ChatContextWCF.Entry(new UserInConversation()
                 {
                     Conversation = conversation,
                     DateStart = DateTime.Now,
                     Name = conversation.Name,
                     User = userAdd
-                });
+                }).State = EntityState.Added;
             }
 
             ChatContextWCF.Entry(addNotif).State = EntityState.Deleted;
             ChatContextWCF.SaveChanges();
-            return true;
+            return conversation.ID;
         }
 
         public bool AddFriend(int user, int friend)
@@ -96,11 +97,20 @@ namespace ChatWCF
             return true;
         }
 
+        public ConversationInfo ConversationInfo(int conversation, int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var conversationDB = chatContextWCF.Conversation.Find(conversation);
+            return new ConversationInfo(conversationDB,
+                chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation).Select(x => x.User).ToList())
+            { IsCurrentUserAdmin = conversationDB.CreatorID == user };
+        }
+
         public List<ConversationUserSM> ConversationUserList(int ID)
         {
             ChatContextWCF ChatContextWCF = new ChatContextWCF();
-            var list = ChatContextWCF.UserInConversation.Where(x => x.UserID == ID).Select(x => new ConversationUserSM(x.Conversation));
-            return new List<ConversationUserSM>();
+            var list = ChatContextWCF.UserInConversation.Where(x => x.UserID == ID).Select(x => new ConversationUserSM(x));
+            return list.ToList();
         }
 
         public bool DeclineFriend(int user, int notif)
@@ -138,11 +148,41 @@ namespace ChatWCF
         {
             ChatContextWCF ChatContextWCF = new ChatContextWCF();
             var result = ChatContextWCF.Users.Where(x => x.Name.Contains(keys) && x.ID != user).Select(x => new UserSM(x)).Take(20).ToList();
-            var conversations = ChatContextWCF.UserInConversation.Where(x => x.UserID == user).Select(x => x.Conversation).Take(20).ToList();
-            result.AddRange(conversations.Select(x => new UserSM(x)));
-            // Change logic!!!
-            result.Reverse();
-            return result;
+            var conversations = ChatContextWCF.UserInConversation.Where(x => x.UserID == user && x.Name.Contains(keys)).Select(x => new UserSM(x.Conversation) { Image = x.Image }).Take(20).ToList();
+            conversations.AddRange(result);
+            return conversations;
+        }
+
+        public ConversationUserSM GetConversation(int user, int conversation)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var conversationDB = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
+            return new ConversationUserSM(conversationDB) { ConversationID = conversation };
+        }
+
+        public NotificationSM GetNotification(int user, int notification)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            NotificationSM notificationSM;
+            Notification common = chatContextWCF.CommonNotifications.Find(notification);
+            if (common == null)
+            {
+                notificationSM = chatContextWCF.AddFriendNotifications.Where(x => x.ID == notification)
+                    .Select(x => new NotificationSM(x, x.UserTo)).FirstOrDefault();
+                return notificationSM;
+            }
+            return new NotificationSM(common as CommonNotification);
+        }
+
+        public List<NotificationSM> GetNotifications(int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            List<NotificationSM> notifications = chatContextWCF.AddFriendNotifications
+                .Where(x => !x.IsRead && x.UserToID == user).Take(20).Select(x => new NotificationSM(x, x.UserFrom)).ToList();
+            notifications.AddRange(chatContextWCF.CommonNotifications
+                .Where(x => !x.IsRead && x.UserID == user).Take(20).Select(x => new NotificationSM(x)));
+            notifications.OrderByDescending(x => x.DateTime);
+            return notifications;
         }
 
         public UserFriendSM GetUser(int user, int userFrom)
@@ -150,19 +190,18 @@ namespace ChatWCF
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             List<int> setUser = new List<int>() { user, userFrom };
             var userDB = chatContextWCF.Users.Find(user);
-            bool isFriend = chatContextWCF.Conversation
-                .Where(x => x.UserInConversations
-                    .Where(y => y.UserID == user || y.UserID == userFrom).Count() > 0
-                            && x.UserInConversations.Count() == 2)
-                .Count() > 0
-                || chatContextWCF.AddFriendNotifications
+            var userConvers = chatContextWCF.Users.Where(x => x.ID == user).Select(x => x.Conversations);
+            var anotherConvers = chatContextWCF.Users.Where(x => x.ID == userFrom).Select(x => x.Conversations);
+            bool isFriend = chatContextWCF.UserInConversation.Where(x => setUser.In(x.UserID)).GroupBy(x => x.ConversationID)
+                .Where(x => x.Count() == 2).Count() > 0;
+            bool isAdding = chatContextWCF.AddFriendNotifications
                 .FirstOrDefault(x => setUser.In(x.UserFromID) && setUser.In(x.UserToID)) != null;
-            return new UserFriendSM(userDB, isFriend);
+            return new UserFriendSM(userDB, isFriend) { IsAdding = isAdding };
         }
 
         public bool InvitationAnswer(int user, int initiation, bool answer)
         {
-            throw new NotImplementedException();
+            return answer ? AcceptFriend(user, initiation) > -1 : DeclineFriend(user, initiation);
         }
     }
 }

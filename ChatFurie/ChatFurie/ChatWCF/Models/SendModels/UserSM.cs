@@ -35,5 +35,13 @@ namespace ChatWCF.Models.SendModels
             this.Name = conversation.Name;
             this.IsConversation = true;
         }
+
+        public UserSM(UserInConversation userInConversation)
+        {
+            this.ID = userInConversation.ConversationID;
+            this.Image = userInConversation.Image;
+            this.Name = userInConversation.Name;
+            this.IsConversation = true;
+        }
     }
 }

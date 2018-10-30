@@ -17,7 +17,14 @@ namespace ChatWCF.Models.SendModels
         {
         }
 
+        public ConversationUserSM(UserInConversation userInConversation) : base(userInConversation)
+        {
+        }
+
         [DataMember]
         public bool IsAdmin { get; set; }
+
+        [DataMember]
+        public int ConversationID { get; set; }
     }
 }

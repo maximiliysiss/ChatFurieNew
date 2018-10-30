@@ -10,6 +10,7 @@ namespace ChatWCF.Models
         public int ID { get; set; }
         public string Context { get; set; }
         public DateTime DateTime { get; set; }
+        public bool IsRead { get; set; }
     }
 
     public class CommonNotification : Notification

@@ -26,7 +26,7 @@ namespace ChatWCF
         List<ConversationUserSM> ConversationUserList(int ID);
 
         [OperationContract]
-        bool AcceptFriend(int user, int newFriend);
+        int AcceptFriend(int user, int newFriend);
 
         [OperationContract]
         bool DeclineFriend(int user, int newFriend);
@@ -39,5 +39,17 @@ namespace ChatWCF
 
         [OperationContract]
         UserFriendSM GetUser(int user, int userFrom);
+
+        [OperationContract]
+        List<NotificationSM> GetNotifications(int user);
+
+        [OperationContract]
+        NotificationSM GetNotification(int user, int notification);
+
+        [OperationContract]
+        ConversationUserSM GetConversation(int user, int conversation);
+
+        [OperationContract]
+        ConversationInfo ConversationInfo(int conversation, int user);
     }
 }
