@@ -10,5 +10,7 @@ namespace ChatFurie.Services
         public static int AGE = 18;
 
         public static int STRLEN = 20;
+
+        public static int STRLEN_C = 50;
     }
 }

@@ -3,9 +3,12 @@
 
 @foreach (var obj in Model)
 {
-    <div class="user-info contact-find" id="@obj.ID">
-        <img id="@obj.ID" src="@obj.Image" class="img40" />
+    <div class="user-info @(obj.IsConversation?"conversation-find":"contact-find")" id="@obj.ID">
+        <img id="@obj.ID" src="~/images/@obj.Image" class="img40" />
         <span id="@obj.ID">@Html.StringLengthValidate(obj.Name)</span>
+        @if (!obj.IsConversation)
+        {
         <img id="@obj.ID" src="~/images/condition-on.jpg" class="img10" />
+        }
     </div>
 }

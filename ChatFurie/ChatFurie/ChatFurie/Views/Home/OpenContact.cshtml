@@ -52,13 +52,14 @@
         <span class="div-img">
             <img src="~/images/condition-on.jpg" class="img10" />
         </span>
-        @if (!Model.IsFriend)
+        <span class="push"></span>
+        @if (!Model.IsFriend && !Model.IsAdding)
         {
-            <span class="push div-img">
+            <span class="div-img">
                 <img id="addFriend" name="@Model.UserSM.ID" src="~/images/addIcon.jpg" class="img40 actions" />
             </span>
         }
-        else
+        @if(Model.IsFriend)
         {
             <span class="div-img">
                 <img id="deleteFriend" name="@Model.UserSM.ID" src="~/images/deleteIcon.png" class="img40 actions" />

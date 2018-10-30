@@ -1,0 +1,14 @@
+﻿@model List<NotificationSM>
+
+<style>
+    .notification > span {
+        justify-content: center;
+    }
+</style>
+
+@foreach (var obj in Model)
+{
+    <div class="user-info notification" id="@obj.ID">
+        <span id="@obj.ID">@Html.StringLengthValidate(obj.Context, true)</span>
+    </div>
+}

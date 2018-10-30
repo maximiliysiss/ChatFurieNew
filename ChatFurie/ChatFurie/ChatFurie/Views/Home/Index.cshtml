@@ -7,6 +7,13 @@
     var user = chatContext.Users.Find(userID);
 }
 
+<div class="modal fade" id="modalWindow" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div id="modalContent" class="modal-content">
+        </div>
+    </div>
+</div>
+
 <div class="f-column column">
     <div class="user-info">
         <img src="~/images/DefaultUserImg.png" class="img40" />
@@ -31,6 +38,7 @@
 
 
 <script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.1/js/toastr.js"></script>
 <script>
 
@@ -55,13 +63,64 @@
     // On Start page
     $(function () {
 
+        var modalWindow = $("#modalWindow");
+        var modalWindowContent = $("#modalContent");
+
+
+        function GetStartPage() {
+            $("#s-column").html('<img style="width:100%" />');
+        }
+
+        function LoadConversations() {
+            AjaxPost({ "user": "@userID" }, "@Url.Action("GetConversations","Home")", function (e) {
+                $("#list-output").html(e);
+                $(".conversation").click(function () {
+                    OpenConversation($(this).attr("id"));
+                });
+            });
+        }
+
+        function LoadNotifications() {
+            AjaxPost({ "user": "@userID" }, "@Url.Action("GetNotifications","Home")", function (e) {
+                $("#Notifications").html(e);
+                $(".notification").click(function () {
+                    OpenNotification($(this).attr("id"));
+                });
+            });
+        }
+
+        LoadConversations();
+        LoadNotifications();
+
+        function OpenNotification(id) {
+            AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("OpenNotification","Home")",
+                function (e) {
+                    $("#s-column").html(e);
+                    $("#acceptFriend").click(function () {
+                        var id = $(this).attr("name");
+                        AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("AcceptFriend","Home")",
+                            function (e) {
+                                OpenConversation(e);
+                                LoadNotifications();
+                                LoadConversations();
+                            });
+                    });
+                    $("#declineFriend").click(function () {
+                        var id = $(this).attr("name");
+                        AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("DeclineFriend","Home")",
+                            function (e) {
+                                GetStartPage();
+                                LoadNotifications();
+                            });
+                    });
+                });
+        }
+
         // Searching conversations and friends
         $('#search-input').keyup(function () {
             var text = $(this).val().trim();
             if (text.length === 0) {
-                AjaxPost({ "user": "@userID" },
-                    "@Url.Action("GetConversations", "Home")",
-                    function (e) { $('#list-output').html(e); });
+                LoadConversations();
             }
             else {
                 AjaxPost({ "find": text, "user": "@userID" },
@@ -91,10 +150,30 @@
                     "@Url.Action("AddFriend","Home")", function (e) {
                         if (!e)
                             toastr["error"]("Unreport exception");
-                        else
+                        else {
+                            toastr["success"]("Success adding");
                             OpenContact(nUser);
+                        }
                     });
             });
+        }
+
+        function OpenConversation(id) {
+            AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("OpenConversation", "Home")",
+                function (e) {
+                    $("#s-column").html(e);
+                    /// Realize
+
+                    $(".header-info").click(function () {
+                        var id = $(this).attr("id");
+                        AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("ConversationInfo")",
+                            function (e) {
+                                $(modalWindowContent).html(e);
+                                $(modalWindow).modal("show");
+                            });
+                    });
+
+                });
         }
 
         /// Переписать под универсал!
@@ -119,8 +198,8 @@
             data: data,
             method: "POST",
             success: success,
-            error: function (error) {
-                toastr["error"](error);
+            error: function (jqXHR, textStatus, errorThrown) {
+                toastr["error"](jqXHR.responseText);
             }
         });
     }
