@@ -11,11 +11,20 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChatFurie.Controllers
 {
     public class AccountController : Controller
     {
+        protected readonly ILogger<AccountController> _logger;
+
+        public AccountController(ILogger<AccountController> logger)
+        {
+            if (_logger == null)
+                _logger = logger;
+        }
+
         public IActionResult Login()
         {
             return View();
@@ -31,7 +40,7 @@ namespace ChatFurie.Controllers
             ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "ChatFurieLogin");
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             await HttpContext.SignInAsync(claimsPrincipal);
-            Logger.Log.Info($"Login for {loginModel.Login}");
+            _logger.LogInformation($"Login for {loginModel.Login}");
         }
 
         [HttpPost]
@@ -39,7 +48,7 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
-                Logger.Log.Info($"Start login for {loginModel.Login}");
+                _logger.LogInformation($"Start login for {loginModel.Login}");
                 ChatContext chatContext = new ChatContext();
                 var user = chatContext.Users.Where(x => x.Login == loginModel.Login).FirstOrDefault();
                 if (user != null)
@@ -48,9 +57,9 @@ namespace ChatFurie.Controllers
                         Login(loginModel, user.ID.ToString());
                         return RedirectToAction("Index", "Home");
                     }
-                Logger.Log.Warn($"Invalid login/password");
+                _logger.LogWarning($"Invalid login/password");
             }
-            Logger.Log.Warn($"Invalid login {loginModel.Login}");
+            _logger.LogWarning($"Invalid login {loginModel.Login}");
             return View(loginModel);
         }
 
@@ -71,7 +80,7 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
-                Logger.Log.Info($"Start register for {registerModel.Email}");
+                _logger.LogInformation($"Start register for {registerModel.Email}");
                 User newUser = new User
                 {
                     Email = registerModel.Email,
@@ -92,7 +101,7 @@ namespace ChatFurie.Controllers
                 }, newUser.ID.ToString());
                 return RedirectToAction("Index", "Home");
             }
-            Logger.Log.Warn($"Invalid register for {registerModel.Email}");
+            _logger.LogWarning($"Invalid register for {registerModel.Email}");
             return View(registerModel);
         }
     }

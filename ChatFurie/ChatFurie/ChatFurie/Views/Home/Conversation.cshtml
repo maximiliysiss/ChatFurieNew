@@ -1,10 +1,90 @@
-﻿@model Conversation
+﻿@model ConversationUserSM
 
-<div class="header-info">
+<style>
+
+    .header-info {
+        background-color: #ededed;
+        display: flex;
+        flex-direction: row;
+        padding: 15px;
+        height: 70px;
+        min-height: 70px;
+    }
+
+        .header-info:hover {
+            cursor: pointer;
+            background-color: #d6d6d6;
+        }
+
+    .push {
+        margin-left: auto;
+    }
+
+    .header-info > span {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-right: 20px;
+    }
+
+    .div-img {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+        .div-img > img {
+            border-radius: 65px;
+        }
+
+    .vision {
+        flex: 5;
+        min-height: 400px;
+    }
+
+    .messages {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 180px;
+        background-color: #ededed;
+    }
+
+    .messages-box {
+        flex: 1;
+    }
+
+    .messages-line {
+        min-height: 40px;
+        height: 40px;
+    }
+
+    .search > .msg-line-background {
+        background-image: url("/images/send.png");
+    }
+</style>
+
+<div class="header-info" id="@Model.ID">
+    <span class="div-img">
+        <img src="~/images/@Model.Image" class="img40" />
+    </span>
+    <span>@Model.Name</span>
+    @if (!Model.IsConversation)
+    {
+        <span class="div-img">
+            <img src="~/images/condition-on.jpg" class="img10" />
+        </span>
+    }
 </div>
 
 <div class="vision">
 </div>
 
 <div class="messages">
+    <div class="messages-box"></div>
+    <div class="messages-line">
+        <div class="search">
+            <input id="msg-input" class="msg-line-background" type="text" />
+        </div>
+    </div>
 </div>

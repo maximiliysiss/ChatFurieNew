@@ -151,7 +151,9 @@
     <Compile Include="Models\Conversation.cs" />
     <Compile Include="Models\ConversationMessage.cs" />
     <Compile Include="Models\Notification.cs" />
+    <Compile Include="Models\SendModels\ConversationInfo.cs" />
     <Compile Include="Models\SendModels\ConversationUserSM.cs" />
+    <Compile Include="Models\SendModels\NotificationSM.cs" />
     <Compile Include="Models\SendModels\UserFriendSM.cs" />
     <Compile Include="Models\SendModels\UserSM.cs" />
     <Compile Include="Models\User.cs" />

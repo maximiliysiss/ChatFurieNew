@@ -4,14 +4,16 @@ using ChatFurie.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ChatFurie.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    partial class ChatContextModelSnapshot : ModelSnapshot
+    [Migration("20181029210851_CorrectConversation")]
+    partial class CorrectConversation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,7 +125,7 @@ namespace ChatFurie.Migrations
 
                     b.Property<string>("Image")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue("DefaultIconAccount.png");
+                        .HasDefaultValue("/DefaultIconAccount.png");
 
                     b.Property<DateTime>("LastEnter");
 
@@ -150,7 +152,7 @@ namespace ChatFurie.Migrations
 
                     b.Property<string>("Image")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue("DefaultIconAccount.png");
+                        .HasDefaultValue("/DefaultIconAccount.png");
 
                     b.Property<string>("Name");
 

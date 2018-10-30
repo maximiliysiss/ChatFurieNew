@@ -8,10 +8,10 @@ namespace ChatFurie.Services
 {
     public static class HtmlHepler
     {
-        public static string StringLengthValidate(this IHtmlHelper htmlHelper, string input)
+        public static string StringLengthValidate(this IHtmlHelper htmlHelper, string input, bool isConversation = false)
         {
-            if (input.Length > Constants.STRLEN)
-                return $"{input.Substring(0, Constants.STRLEN - 3)}...";
+            if (input.Length > (isConversation ? Constants.STRLEN_C : Constants.STRLEN))
+                return $"{input.Substring(0, (isConversation ? Constants.STRLEN_C : Constants.STRLEN - 3))}...";
             return input;
         }
 

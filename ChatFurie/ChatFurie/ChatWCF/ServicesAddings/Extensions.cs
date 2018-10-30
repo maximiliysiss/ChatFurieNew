@@ -14,5 +14,13 @@ namespace ChatWCF.Services
                     return true;
             return false;
         }
+
+        public static bool In<T>(this IEnumerable<T> ts, IEnumerable<T> sec)
+        {
+            foreach (var obj in ts)
+                if (sec.In(ts))
+                    return true;
+            return false;
+        }
     }
 }

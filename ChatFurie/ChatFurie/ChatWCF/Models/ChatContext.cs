@@ -35,7 +35,10 @@ namespace ChatWCF.Models
 
             modelBuilder.Entity<User>(x => x.ToTable("Users"));
             modelBuilder.Entity<User>().Property(x => x.Image)
-                .HasDefaultValue("/DefaultIconAccount.png");
+                .HasDefaultValue("DefaultIconAccount.png");
+
+            modelBuilder.Entity<UserInConversation>().Property(x=>x.Image)
+                .HasDefaultValue("DefaultIconAccount.png");
 
             #region UserInConversation
             modelBuilder.Entity<UserInConversation>()

@@ -1,0 +1,25 @@
+﻿@model NotificationSM
+
+<style>
+    .notification-show {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .notification-show-text {
+        padding: 25px;
+        font-size: 20pt;
+    }
+</style>
+
+<div class="notification-show">
+    <span class="notification-show-text">@Model.Context</span>
+    <span>
+        <input name="@Model.ID" class="btn btn-danger" id="acceptFriend" type="button" value="Accept" />
+        <input name="@Model.ID" class="btn btn-success" id="declineFriend" type="button" value="Decline" />
+    </span>
+</div>

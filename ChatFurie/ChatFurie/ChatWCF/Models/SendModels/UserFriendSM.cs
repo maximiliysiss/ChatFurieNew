@@ -27,5 +27,8 @@ namespace ChatWCF.Models.SendModels
 
         [DataMember]
         public bool IsFriend { get; set; }
+
+        [DataMember]
+        public bool IsAdding { get; set; }
     }
 }
