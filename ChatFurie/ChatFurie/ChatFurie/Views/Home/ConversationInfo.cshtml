@@ -1,0 +1,42 @@
+﻿@model ConversationInfo
+
+<style>
+    .userInConversationInfo {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        height: 50px;
+    }
+
+        .userInConversationInfo > span {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+    .modal-title {
+        font-size: 16px;
+        text-align: center;
+    }
+</style>
+
+<div class="modal-header">
+    <h5 class="modal-title" id="ConversationInfoTitle">Conversation Information about @Model.Conversation.Name</h5>
+</div>
+<div class="modal-body">
+    @foreach (var obj in Model.ConversationUserSMs)
+    {
+        <div class="userInConversationInfo">
+            <span>@obj.Name</span>
+            @if (Model.IsCurrentUserAdmin)
+            {
+                <span>
+                    <img src="~/images/deleteIcon.png" class="img40" />
+                </span>
+            }
+        </div>
+    }
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>

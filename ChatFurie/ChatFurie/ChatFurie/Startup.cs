@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ChatFurie.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,10 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using NLog.Web;
+using ChatFurie.Middleware.Sockets;
 
 namespace ChatFurie
 {
@@ -43,7 +48,7 @@ namespace ChatFurie
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -66,6 +71,15 @@ namespace ChatFurie
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            env.ConfigureNLog("nlog.config");
+            loggerFactory.AddNLog();
+#pragma warning disable CS0618 // Type or member is obsolete
+            app.AddNLogWeb();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            //app.UseMiddleware<MessageSocketTransform>();
+            app.UseWebSockets();
         }
     }
 }

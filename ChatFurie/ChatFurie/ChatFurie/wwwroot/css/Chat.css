@@ -97,3 +97,34 @@
     height: 60px;
     background-color: white;
 }
+
+.tabs-line {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.tab-header {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+}
+
+
+    .tab-header:hover {
+        background-color: #bcbcbc;
+        cursor: pointer;
+    }
+
+.tab-header-active {
+    background-color: #bcbcbc;
+}
+
+
+.actions:hover {
+    cursor: pointer;
+}

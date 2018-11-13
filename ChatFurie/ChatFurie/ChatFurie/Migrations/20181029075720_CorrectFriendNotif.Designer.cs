@@ -4,14 +4,16 @@ using ChatFurie.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ChatFurie.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    partial class ChatContextModelSnapshot : ModelSnapshot
+    [Migration("20181029075720_CorrectFriendNotif")]
+    partial class CorrectFriendNotif
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,8 +34,6 @@ namespace ChatFurie.Migrations
                     b.Property<int?>("DialogID");
 
                     b.Property<bool>("IsDialog");
-
-                    b.Property<bool>("IsRead");
 
                     b.Property<int>("UserFromID");
 
@@ -59,8 +59,6 @@ namespace ChatFurie.Migrations
                     b.Property<string>("Context");
 
                     b.Property<DateTime>("DateTime");
-
-                    b.Property<bool>("IsRead");
 
                     b.Property<int>("UserID");
 
@@ -123,7 +121,7 @@ namespace ChatFurie.Migrations
 
                     b.Property<string>("Image")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue("DefaultIconAccount.png");
+                        .HasDefaultValue("/DefaultIconAccount.png");
 
                     b.Property<DateTime>("LastEnter");
 
@@ -148,9 +146,7 @@ namespace ChatFurie.Migrations
 
                     b.Property<DateTime>("DateStart");
 
-                    b.Property<string>("Image")
-                        .ValueGeneratedOnAdd()
-                        .HasDefaultValue("DefaultIconAccount.png");
+                    b.Property<string>("Image");
 
                     b.Property<string>("Name");
 

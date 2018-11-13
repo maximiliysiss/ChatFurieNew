@@ -1,4 +1,5 @@
-﻿using ChatFurie.Models.ChatModel;
+﻿
+using ChatWCF.Models;
 using ChatWCF.Models.SendModels;
 using System;
 using System.Collections.Generic;
@@ -13,21 +14,42 @@ namespace ChatWCF
     interface IChat
     {
         [OperationContract]
-        bool AddFriend(int user, int friend);
+        bool AddFriend(int user, int notif);
 
         [OperationContract]
-        bool DeleteFriend(int user, int friend);
+        bool DeleteFriend(int user, int friend, int conversation);
 
         [OperationContract]
         bool InvitationAnswer(int user, int initiation, bool answer);
 
         [OperationContract]
-        List<UserSM> FriendList(int user);
+        List<ConversationUserSM> ConversationUserList(int ID);
 
         [OperationContract]
-        List<UserSM> FindFriends(string keys);
+        int AcceptFriend(int user, int newFriend);
 
         [OperationContract]
-        List<ConversationUserSM> ConversationUserList(int ID); 
+        bool DeclineFriend(int user, int newFriend);
+
+        [OperationContract]
+        bool AddFriendToConversation(int user, int friend, int conversation);
+
+        [OperationContract]
+        bool DeleteFriendFromConversation(int user, int friend, int conversation);
+
+        [OperationContract]
+        UserFriendSM GetUser(int user, int userFrom);
+
+        [OperationContract]
+        List<NotificationSM> GetNotifications(int user);
+
+        [OperationContract]
+        NotificationSM GetNotification(int user, int notification);
+
+        [OperationContract]
+        ConversationUserSM GetConversation(int user, int conversation);
+
+        [OperationContract]
+        ConversationInfo ConversationInfo(int conversation, int user);
     }
 }

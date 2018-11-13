@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Models.ChatModel
+namespace ChatWCF.Models
 {
     public class UserInConversation
     {
@@ -20,5 +20,7 @@ namespace ChatFurie.Models.ChatModel
         public string Image { get; set; }
 
         public DateTime DateStart { get; set; }
+
+        public string Name { get; set; }
     }
 }
