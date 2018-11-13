@@ -1,11 +1,10 @@
 ﻿using ChatWCF.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Models
+namespace AuthServiceWCF.Models
 {
     /// <summary>
     /// Main Context For ChatModels

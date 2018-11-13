@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Services
+namespace AuthServiceWCF.Helpers
 {
     /// <summary>
     /// Validate date, only +18

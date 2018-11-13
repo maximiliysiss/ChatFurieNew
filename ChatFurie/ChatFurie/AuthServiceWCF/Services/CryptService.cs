@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatFurie.Services
+namespace AuthServiceWCF.Services
 {
     /// <summary>
     /// Crypt Service
