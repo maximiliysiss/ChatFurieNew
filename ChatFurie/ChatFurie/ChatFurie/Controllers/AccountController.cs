@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AuthServiceWCF;
+using AuthServiceWCF.Helpers;
+using AuthServiceWCF.Models;
 using ChatFurie.Models;
-using ChatFurie.Models.AccountModel;
 using ChatFurie.Services;
 using ChatWCF.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -25,6 +27,8 @@ namespace ChatFurie.Controllers
                 _logger = logger;
         }
 
+        public AccountController() { }
+
         public IActionResult Login()
         {
             return View();
@@ -40,7 +44,7 @@ namespace ChatFurie.Controllers
             ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, "ChatFurieLogin");
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             await HttpContext.SignInAsync(claimsPrincipal);
-            _logger.LogInformation($"Login for {loginModel.Login}");
+            _logger?.LogInformation($"Login for {loginModel.Login}");
         }
 
         [HttpPost]
@@ -48,18 +52,17 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
-                _logger.LogInformation($"Start login for {loginModel.Login}");
-                ChatContext chatContext = new ChatContext();
-                var user = chatContext.Users.Where(x => x.Login == loginModel.Login).FirstOrDefault();
-                if (user != null)
-                    if (CryptService.VerifyHash(loginModel.Password, user.PasswordHash))
-                    {
-                        Login(loginModel, user.ID.ToString());
-                        return RedirectToAction("Index", "Home");
-                    }
-                _logger.LogWarning($"Invalid login/password");
+                _logger?.LogInformation($"Start login for {loginModel.Login}");
+                AuthService authService = new AuthService();
+                LoginActionResult resultCode = authService.Login(loginModel) as LoginActionResult;
+                if (resultCode.Status == ResultCode.Success)
+                {
+                    Login(loginModel, resultCode.Id);
+                    return RedirectToAction("Index", "Home");
+                }
+                _logger?.LogWarning($"Invalid login/password");
             }
-            _logger.LogWarning($"Invalid login {loginModel.Login}");
+            _logger?.LogWarning($"Invalid login {loginModel.Login}");
             return View(loginModel);
         }
 
@@ -80,28 +83,16 @@ namespace ChatFurie.Controllers
         {
             if (ModelState.IsValid)
             {
-                _logger.LogInformation($"Start register for {registerModel.Email}");
-                User newUser = new User
+                _logger?.LogInformation($"Start register for {registerModel.Email}");
+                AuthService authService = new AuthService();
+                var resultCode = authService.Register(registerModel) as RegisterActionResult;
+                if (resultCode.Status == ResultCode.Success)
                 {
-                    Email = registerModel.Email,
-                    LastEnter = DateTime.Now,
-                    Login = registerModel.Email,
-                    Name = registerModel.Email,
-                    PasswordHash = CryptService.GetMd5Hash(registerModel.Password)
-                };
-
-                ChatContext chatContext = new ChatContext();
-                chatContext.Entry(newUser).State = Microsoft.EntityFrameworkCore.EntityState.Added;
-                chatContext.SaveChanges();
-
-                Login(new LoginModel
-                {
-                    Login = registerModel.Email,
-                    Password = registerModel.Password
-                }, newUser.ID.ToString());
-                return RedirectToAction("Index", "Home");
+                    Login(new LoginModel { Login = resultCode.Email, Password = registerModel.Password }, resultCode.Id);
+                    return RedirectToAction("Index", "Home");
+                }
             }
-            _logger.LogWarning($"Invalid register for {registerModel.Email}");
+            _logger?.LogWarning($"Invalid register for {registerModel.Email}");
             return View(registerModel);
         }
     }

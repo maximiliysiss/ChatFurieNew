@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AuthServiceWCF\AuthServiceWCF.csproj" />
     <ProjectReference Include="..\ChatWCF\ChatWCF.csproj" />
   </ItemGroup>
 
