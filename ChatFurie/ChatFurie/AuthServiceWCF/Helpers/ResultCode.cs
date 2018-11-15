@@ -24,10 +24,8 @@ namespace AuthServiceWCF.Helpers
         public string Id { get; set; }
     }
 
-    public class RegisterActionResult : IActionResultWCF
+    public class RegisterActionResult : LoginActionResult, IActionResultWCF
     {
-        public ResultCode Status { get; set; }
-        public string Id { get; set; }
         public string Email { get; set; }
     }
 }

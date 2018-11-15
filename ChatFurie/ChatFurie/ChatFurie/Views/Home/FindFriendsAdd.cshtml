@@ -1,9 +1,14 @@
-﻿@model List<ConversationUserSM>
+﻿@model List<UserSM>
+
+
+<div class="search">
+    <input id="search-input-add-conversation" type="text" />
+</div>
 
 
 @foreach (var obj in Model)
 {
-    <div class="user-info conversation" id="@obj.ID">
+    <div class="user-info contact-find" id="@obj.ID">
         <img id="@obj.ID" src="~/images/@obj.Image" class="img40" />
         <span id="@obj.ID">@Html.StringLengthValidate(obj.Name)</span>
         @if (!obj.IsConversation)

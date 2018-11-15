@@ -7,9 +7,33 @@
     var user = chatContext.Users.Find(userID);
 }
 
+<style>
+    .choice-modal {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 5% 10% 5% 10%;
+        font-size: 14pt;
+    }
+
+</style>
+
 <div class="modal fade" id="modalWindow" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div id="modalContent" class="modal-content">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="choiceModal" tabindex="-1" role="dialog" aria-labelledby="choiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content choice-modal">
+            Are you sure?
+            <div class="modal-footer">
+                <input class="btn btn-success" value="Yes" id="choiceModal-Yes" />
+                <input class="btn btn-danger" data-dismiss="modal" value="No" id="choiceModal-No" />
+            </div>
         </div>
     </div>
 </div>
@@ -25,7 +49,12 @@
     </div>
     <div class="tabs-line">
         <span name="list-output" class="tab-header tab-header-active">Conversations</span>
-        <span name="Notifications" class="tab-header">Notifications</span>
+        <span name="Notifications" class="tab-header">
+            <span>
+                <span style="display:none" class="tab-header-img"></span>
+            </span>
+            Notifications
+        </span>
     </div>
     <div id="list-output" class="list-output">
     </div>
@@ -66,6 +95,16 @@
         var modalWindow = $("#modalWindow");
         var modalWindowContent = $("#modalContent");
 
+        var modalChoice = $('#choiceModal');
+        var modalChoiceYes = $('#choiceModal-Yes');
+        var modalChoiceNo = $('#choiceModal-No');
+
+
+        $(modalWindow).on("hidden.bs.modal", function () { isModalOpen = false; });
+        $(modalChoice).on("hidden.bs.modal", function () { isModalOpen = false; });
+
+        var isModalOpen = false;
+
 
         function GetStartPage() {
             $("#s-column").html('<img style="width:100%" />');
@@ -86,11 +125,28 @@
                 $(".notification").click(function () {
                     OpenNotification($(this).attr("id"));
                 });
+                if ($('#notificationCount').val() > 0) {
+                    $('.tab-header-img').css('display', 'flex');
+                    $('.tab-header-img').html($('#notificationCount').val());
+                } else {
+                    $('.tab-header-img').css('display', 'none');
+                }
             });
         }
 
         LoadConversations();
         LoadNotifications();
+
+        function AddUserToCoversation(conversation) {
+            if (isModalOpen)
+                return;
+            isModalOpen = true;
+            AjaxPost({ find: "", user: "@userID" }, "@Url.Action("FindOnlyFriends")", function (e) {
+                $(modalWindowContent).html(e);
+                $(modalWindow).modal("show");
+            });
+        }
+
 
         function OpenNotification(id) {
             AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("OpenNotification","Home")",
@@ -158,6 +214,37 @@
             });
         }
 
+        function LoadInfoAboutConversation(conversation, ignore = false) {
+            if (isModalOpen && !ignore)
+                return;
+            var id = $(conversation).attr("id");
+            AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("ConversationInfo")",
+                function (e) {
+                    $(modalWindowContent).html(e);
+                    $('.deleteFromConversation').click(function () {
+                        var idUser = $(this).attr("id");
+                        OpenChoiceModal(function () {
+                            AjaxPost({ conversation: id, user: idUser }, "@Url.Action("DeleteUserFromConversation")", function (e) {
+                                toastr[e ? "success" : "error"]("Deleting " + (e ? "success" : "error"));
+                                LoadInfoAboutConversation(conversation, true);
+                            });
+                        }, true);
+                    });
+
+                    $('.setAdminUser').click(function () {
+                        var idUser = $(this).attr('id');
+                        OpenChoiceModal(function () {
+                            AjaxPost({ conversation: id, user: idUser }, "@Url.Action("SetUserAdmin")", function (e) {
+                                toastr[e ? "success" : "error"]("Set user " + (e ? "success" : "error"));
+                                LoadInfoAboutConversation(conversation, true);
+                            });
+                        },true);
+                    })
+                    $(modalWindow).modal("show");
+                    isModalOpen = true;
+                });
+        }
+
         function OpenConversation(id) {
             AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("OpenConversation", "Home")",
                 function (e) {
@@ -165,15 +252,34 @@
                     /// Realize
 
                     $(".header-info").click(function () {
-                        var id = $(this).attr("id");
-                        AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("ConversationInfo")",
-                            function (e) {
-                                $(modalWindowContent).html(e);
-                                $(modalWindow).modal("show");
-                            });
+                        LoadInfoAboutConversation(this);
                     });
 
+                    $('#addUserToConversation').click(function () {
+                        AddUserToCoversation(this);
+                    });
+
+                    $('#outFromConversation').click(function () {
+                        var id = $(this).attr('name');
+                        OpenChoiceModal(function () {
+                            AjaxPost({ conversation: id, user: "@userID" }, "@Url.Action("DeleteUserFromConversation")", function (e) {
+                                GetStartPage();
+                                LoadConversations();
+                            });
+                        });
+                    });
                 });
+        }
+
+        function OpenChoiceModal(successFunction, ignore = false) {
+            if (isModalOpen && !ignore)
+                return;
+            isModalOpen = true;
+            $(modalChoiceYes).click(function () {
+                successFunction();
+                $(modalChoice).modal('hide');
+            });
+            $(modalChoice).modal("show");
         }
 
         /// Переписать под универсал!

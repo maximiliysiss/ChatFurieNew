@@ -27,8 +27,6 @@ namespace ChatFurie.Controllers
                 _logger = logger;
         }
 
-        public AccountController() { }
-
         public IActionResult Login()
         {
             return View();

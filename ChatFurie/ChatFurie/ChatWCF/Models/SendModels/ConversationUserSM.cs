@@ -15,6 +15,7 @@ namespace ChatWCF.Models.SendModels
 
         public ConversationUserSM(Conversation conversation) : base(conversation)
         {
+            this.CreatorID = conversation.CreatorID;
         }
 
         public ConversationUserSM(UserInConversation userInConversation) : base(userInConversation)
@@ -26,5 +27,8 @@ namespace ChatWCF.Models.SendModels
 
         [DataMember]
         public int ConversationID { get; set; }
+
+        [DataMember]
+        public int CreatorID { get; set; }
     }
 }

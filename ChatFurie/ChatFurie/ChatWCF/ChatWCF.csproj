@@ -161,6 +161,7 @@
     <Compile Include="Models\UserReadMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServicesAddings\Extensions.cs" />
+    <Compile Include="ServicesAddings\Helpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

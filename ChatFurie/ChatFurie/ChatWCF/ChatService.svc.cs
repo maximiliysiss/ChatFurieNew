@@ -8,6 +8,7 @@ using ChatWCF.Services;
 using ChatWCF.Models;
 using ChatWCF.Models.SendModels;
 using Microsoft.EntityFrameworkCore;
+using ChatWCF.ServicesAddings;
 
 namespace ChatWCF
 {
@@ -144,6 +145,35 @@ namespace ChatWCF
             throw new NotImplementedException();
         }
 
+        public bool DeleteUserFromConversation(int user, int conversation)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var chain = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
+            if (chain != null)
+            {
+                var conversationEntity = chatContextWCF.Conversation.Find(conversation);
+                chatContextWCF.UserInConversation.Remove(chain);
+                int count = chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation).Count();
+                if (count == 0)
+                    DeleteConversation(chatContextWCF, chatContextWCF.Conversation.Find(conversation));
+                else if (conversationEntity.CreatorID == user)
+                    ChangeConversationAdmin(conversation, chatContextWCF);
+                chatContextWCF.SaveChanges();
+            }
+            return true;
+        }
+
+
+        /// <summary>
+        /// Delete Conversation and all connected data
+        /// </summary>
+        /// <param name="chatContextWCF"></param>
+        /// <param name="conversation"></param>
+        private void DeleteConversation(ChatContextWCF chatContextWCF, Conversation conversation)
+        {
+            chatContextWCF.Conversation.Remove(conversation);
+        }
+
         public List<UserSM> FindFriends(string keys, int user)
         {
             ChatContextWCF ChatContextWCF = new ChatContextWCF();
@@ -153,11 +183,22 @@ namespace ChatWCF
             return conversations;
         }
 
+        public List<UserSM> FindOnlyFriends(string keys, int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var conversations = chatContextWCF.UserInConversation.Where(x => x.UserID == user)
+                .Select(x => x.Conversation.UserInConversations).SelectMany(x=>x).Select(x=>x.User);
+            if (keys != null)
+                conversations.ToList().AddRange(chatContextWCF.Users.Where(x => x.Login.Contains(keys)));
+            return conversations.Distinct().Select(x => new UserSM(x)).ToList();
+        }
+
         public ConversationUserSM GetConversation(int user, int conversation)
         {
             ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var conversationEntity = chatContextWCF.Conversation.Find(conversation);
             var conversationDB = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
-            return new ConversationUserSM(conversationDB) { ConversationID = conversation };
+            return new ConversationUserSM(conversationDB) { ConversationID = conversation, IsAdmin = user==conversationEntity.CreatorID };
         }
 
         public NotificationSM GetNotification(int user, int notification)
@@ -202,6 +243,25 @@ namespace ChatWCF
         public bool InvitationAnswer(int user, int initiation, bool answer)
         {
             return answer ? AcceptFriend(user, initiation) > -1 : DeclineFriend(user, initiation);
+        }
+
+        public bool ChangeConversationAdmin(int conversation, ChatContextWCF chatContextWCF = null, int user = -1)
+        {
+            bool f = chatContextWCF == null;
+            if (f)
+                chatContextWCF = new ChatContextWCF();
+            var conversationEntity = chatContextWCF.Conversation.Find(conversation);
+            if (user == -1)
+            {
+                var usersConvers = chatContextWCF.UserInConversation.Where(x => x.Conversation == conversationEntity).ToList();
+                user = usersConvers[Helpers.Random.Next() % usersConvers.Count].UserID;
+            }
+
+            conversationEntity.CreatorID = user;
+            if (f)
+                chatContextWCF.SaveChanges();
+
+            return true;
         }
     }
 }

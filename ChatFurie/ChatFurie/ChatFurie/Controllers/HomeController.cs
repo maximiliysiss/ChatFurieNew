@@ -42,6 +42,13 @@ namespace ChatFurie.Controllers
         }
 
         [HttpPost]
+        public IActionResult FindOnlyFriends(string find, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return PartialView("FindFriendsAdd", chatService.FindOnlyFriends(find, user));
+        }
+
+        [HttpPost]
         public bool AddFriend(int user, int newFriend)
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
@@ -102,6 +109,20 @@ namespace ChatFurie.Controllers
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
             return PartialView(chatService.ConversationInfo(conversation, user));
+        }
+
+        [HttpPost]
+        public bool DeleteUserFromConversation(int conversation, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return chatService.DeleteUserFromConversation(user, conversation);
+        }
+
+        [HttpPost]
+        public bool SetUserAdmin(int conversation, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return chatService.ChangeConversationAdmin(conversation, null, user);
         }
     }
 }

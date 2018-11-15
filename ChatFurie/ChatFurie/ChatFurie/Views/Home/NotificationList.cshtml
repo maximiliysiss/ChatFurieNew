@@ -6,6 +6,8 @@
     }
 </style>
 
+<input id="notificationCount" value="@Model.Count" type="hidden" />
+
 @foreach (var obj in Model)
 {
     <div class="user-info notification" id="@obj.ID">

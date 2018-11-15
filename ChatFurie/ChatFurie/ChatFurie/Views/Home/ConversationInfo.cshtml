@@ -4,7 +4,6 @@
     .userInConversationInfo {
         display: flex;
         flex-direction: row;
-        justify-content: space-between;
         height: 50px;
     }
 
@@ -18,6 +17,10 @@
         font-size: 16px;
         text-align: center;
     }
+
+    .conversation-info-btn:hover {
+        cursor: pointer;
+    }
 </style>
 
 <div class="modal-header">
@@ -26,15 +29,19 @@
 <div class="modal-body">
     @foreach (var obj in Model.ConversationUserSMs)
     {
-        <div class="userInConversationInfo">
-            <span>@obj.Name</span>
-            @if (Model.IsCurrentUserAdmin)
-            {
-                <span>
-                    <img src="~/images/deleteIcon.png" class="img40" />
-                </span>
-            }
-        </div>
+    <div class="userInConversationInfo">
+        <span>@obj.Name</span>
+        @if (Model.IsCurrentUserAdmin && obj.ID != Model.Conversation.CreatorID)
+        {
+            <span class="push"></span>
+            <span style="padding-right:20px">
+                <img src="~/images/deleteIcon.png" id="@obj.ID" class="img40 deleteFromConversation conversation-info-btn" />
+            </span>
+            <span style="padding-right:20px">
+                <img src="~/images/admin.png" id="@obj.ID" class="img40 setAdminUser conversation-info-btn" />
+            </span>
+        }
+    </div>
     }
 </div>
 <div class="modal-footer">
