@@ -75,6 +75,16 @@
             <img src="~/images/condition-on.jpg" class="img10" />
         </span>
     }
+    <span class="push"></span>
+    <span class="div-img">
+        <img name="@Model.ID" src="~/images/deleteIcon.png" id="outFromConversation" class="img40" />
+    </span>
+    @if (Model.IsAdmin)
+    {
+        <span>
+            <img name="@Model.ID" style="border-radius:60px" id="addUserToConversation" src="~/images/addIcon.jpg" class="img40" />
+        </span>
+    }
 </div>
 
 <div class="vision">

@@ -14,6 +14,9 @@ namespace ChatWCF
     interface IChat
     {
         [OperationContract]
+        bool DeleteUserFromConversation(int user, int conversation);
+
+        [OperationContract]
         bool AddFriend(int user, int notif);
 
         [OperationContract]
@@ -51,5 +54,8 @@ namespace ChatWCF
 
         [OperationContract]
         ConversationInfo ConversationInfo(int conversation, int user);
+
+        [OperationContract]
+        bool ChangeConversationAdmin(int conversation, ChatContextWCF chatContextWCF = null, int user = -1);
     }
 }

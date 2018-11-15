@@ -18,6 +18,7 @@ namespace ChatFurie.Services
 
         public static string GetUserCondition(this IHtmlHelper htmlHelper, int id)
         {
+            AuthServiceWCF.Models.ChatContext chatContext = new AuthServiceWCF.Models.ChatContext();
             throw new NotImplementedException();
         }
     }
