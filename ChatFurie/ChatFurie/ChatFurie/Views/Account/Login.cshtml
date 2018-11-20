@@ -3,20 +3,28 @@
     ViewData["Title"] = "Login";
 }
 
-<h2>Login</h2>
+<head>
+    <link rel="stylesheet" href="~/css/Account.css" />
+</head>
 
-@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+<div class="form">
 
-@using (Html.BeginForm("Login", "Account", FormMethod.Post))
-{
-    @Html.LabelFor(x => x.Login)
-    @Html.TextBoxFor(x => x.Login)
+    <div>
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    </div>
 
-    <br>
+    @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+    {
+        @Html.LabelFor(x => x.Login)
+        @Html.TextBoxFor(x => x.Login, null, new { @class = "input-text" })
 
-    @Html.LabelFor(x => x.Password)
-    @Html.TextBoxFor(x => x.Password)
+        <br>
 
-    <input type="submit" value="Login" />
-}
+        @Html.LabelFor(x => x.Password)
+        @Html.PasswordFor(x => x.Password, new { @class = "input-text" })
+
+        <input class="btn btn-success btn-submit" type="submit" value="Login" />
+    }
+
+</div>
 

@@ -17,11 +17,25 @@
         font-size: 14pt;
     }
 
+    .modal-content {
+        padding: 20px;
+    }
 </style>
 
 <div class="modal fade" id="modalWindow" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div id="modalContent" class="modal-content">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalWindow-AddUser" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div id="modalContent-tmp" class="modal-content">
+            <div class="search">
+                <input id="search-input-add-conversation" type="text" />
+            </div>
+            <div id="modalContent-AddUser"></div>
         </div>
     </div>
 </div>
@@ -99,8 +113,15 @@
         var modalChoiceYes = $('#choiceModal-Yes');
         var modalChoiceNo = $('#choiceModal-No');
 
+        var modalAddUser = $('#modalWindow-AddUser');
+        var modalAddUserContent = $('#modalContent-AddUser')
+
 
         $(modalWindow).on("hidden.bs.modal", function () { isModalOpen = false; });
+        $(modalAddUser).on("hidden.bs.modal", function () {
+            isModalOpen = false;
+            $('#search-input-add-conversation').val("");
+        });
         $(modalChoice).on("hidden.bs.modal", function () { isModalOpen = false; });
 
         var isModalOpen = false;
@@ -141,9 +162,17 @@
             if (isModalOpen)
                 return;
             isModalOpen = true;
-            AjaxPost({ find: "", user: "@userID" }, "@Url.Action("FindOnlyFriends")", function (e) {
-                $(modalWindowContent).html(e);
-                $(modalWindow).modal("show");
+            AjaxPost({ find: "", user: "@userID", conversation: $(conversation).attr("name") }, "@Url.Action("FindOnlyFriends")", function (e) {
+                $(modalAddUserContent).html(e);
+                $(modalAddUser).modal("show");
+                $('#search-input-add-conversation').keyup(function () {
+                    var text = $(this).val().trim();
+                    if (text.length === 0)
+                        return;
+                    AjaxPost({ find: text, user: "@userID", conversation: $(conversation).attr("name") }, "@Url.Action("FindOnlyFriends")", function (e) {
+                        $(modalAddUserContent).html(e);
+                    });
+                });
             });
         }
 

@@ -183,13 +183,15 @@ namespace ChatWCF
             return conversations;
         }
 
-        public List<UserSM> FindOnlyFriends(string keys, int user)
+        public List<UserSM> FindOnlyFriends(string keys, int user, int conversation)
         {
             ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var usersInConversation = chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation).Select(x => x.UserID);
             var conversations = chatContextWCF.UserInConversation.Where(x => x.UserID == user)
-                .Select(x => x.Conversation.UserInConversations).SelectMany(x=>x).Select(x=>x.User);
+                .Select(x => x.Conversation.UserInConversations).SelectMany(x => x)
+                .Select(x => x.User).Where(x => !usersInConversation.Contains(x.ID)).ToList();
             if (keys != null)
-                conversations.ToList().AddRange(chatContextWCF.Users.Where(x => x.Login.Contains(keys)));
+                conversations.AddRange(chatContextWCF.Users.Where(x => x.Login.Contains(keys) && !usersInConversation.Contains(x.ID)));
             return conversations.Distinct().Select(x => new UserSM(x)).ToList();
         }
 
@@ -198,7 +200,7 @@ namespace ChatWCF
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             var conversationEntity = chatContextWCF.Conversation.Find(conversation);
             var conversationDB = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
-            return new ConversationUserSM(conversationDB) { ConversationID = conversation, IsAdmin = user==conversationEntity.CreatorID };
+            return new ConversationUserSM(conversationDB) { ConversationID = conversation, IsAdmin = user == conversationEntity.CreatorID };
         }
 
         public NotificationSM GetNotification(int user, int notification)

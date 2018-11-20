@@ -3,35 +3,57 @@
     ViewData["Title"] = "Register";
 }
 
-<h2>Register</h2>
+<head>
+    <link rel="stylesheet" href="~/css/Account.css" />
+</head>
 
-@using (Html.BeginForm("Register", "Account", FormMethod.Post))
-{
+<style>
 
-    <span asp-validation-for="Birthday"></span>
-    <span asp-validation-for="Email"></span>
-    <span asp-validation-for="Password"></span>
-    <span asp-validation-for="ConfirmedPassword"></span>
+    form {
+        width: 30%;
+    }
 
-    @Html.LabelFor(x => x.Email)
-    @Html.TextBoxFor(x => x.Email)
+    label {
+        width: 55%;
+        text-align: right;
+    }
 
-    <br />
+    .input-text {
+        width: 45%;
+    }
+</style>
 
-    @Html.LabelFor(x => x.Password)
-    @Html.TextBoxFor(x => x.Password)
+<div class="form">
 
-    <br />
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+    {
 
-    @Html.LabelFor(x => x.ConfirmedPassword)
-    @Html.TextBoxFor(x => x.ConfirmedPassword)
+        <div class="text-danger">
+            <span asp-validation-for="Birthday"></span>
+            <span asp-validation-for="Email"></span>
+            <span asp-validation-for="Password"></span>
+            <span asp-validation-for="ConfirmedPassword"></span>
+        </div>
+        @Html.LabelFor(x => x.Email)
+        @Html.TextBoxFor(x => x.Email, null, new { @class = "input-text" })
 
-    <br />
+        <br />
 
-    @Html.LabelFor(x => x.Birthday, new { type = "date" })
-    @Html.TextBoxFor(x => x.Birthday, new { type = "date" })
+        @Html.LabelFor(x => x.Password)
+        @Html.TextBoxFor(x => x.Password, new { @class = "input-text" })
 
-    <br />
+        <br />
 
-    <input type="submit" value="Register" />
-}
+        @Html.Label("Confirmed Password")
+        @Html.PasswordFor(x => x.ConfirmedPassword, new { @class = "input-text" })
+
+        <br />
+
+        @Html.LabelFor(x => x.Birthday, new { type = "date" })
+        @Html.TextBoxFor(x => x.Birthday, null, new { type = "date" })
+
+
+        <input class="btn btn-submit btn-success" type="submit" value="Register" />
+    }
+
+</div>

@@ -42,10 +42,10 @@ namespace ChatFurie.Controllers
         }
 
         [HttpPost]
-        public IActionResult FindOnlyFriends(string find, int user)
+        public IActionResult FindOnlyFriends(string find, int user, int conversation)
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
-            return PartialView("FindFriendsAdd", chatService.FindOnlyFriends(find, user));
+            return PartialView("FindFriendsAdd", chatService.FindOnlyFriends(find, user, conversation));
         }
 
         [HttpPost]
