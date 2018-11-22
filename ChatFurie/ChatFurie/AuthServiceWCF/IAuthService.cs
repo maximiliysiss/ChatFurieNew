@@ -1,5 +1,6 @@
 ﻿using AuthServiceWCF.Helpers;
 using AuthServiceWCF.Models;
+using ChatWCF.Models.SendModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,15 @@ namespace AuthServiceWCF
     {
 
         [OperationContract]
+        UserPageModel GetUserSettings(int id);
+
+        [OperationContract]
         IActionResultWCF Login(LoginModel loginModel);
 
         [OperationContract]
         IActionResultWCF Register(RegisterModel registerModel);
 
+        [OperationContract]
+        IActionResultWCF SaveSettingsUser(UserPageModel userPageModel);
     }
 }

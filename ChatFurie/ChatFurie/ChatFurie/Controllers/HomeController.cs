@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using ChatFurie.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using AuthServiceWCF.Models;
+using AuthServiceWCF.Helpers;
 
 namespace ChatFurie.Controllers
 {
@@ -42,10 +44,31 @@ namespace ChatFurie.Controllers
         }
 
         [HttpPost]
+        public IActionResult LoadUserSettings(int user)
+        {
+            AuthServiceWCF.AuthService authService = new AuthServiceWCF.AuthService();
+            return PartialView("UserPage", authService.GetUserSettings(user));
+        }
+
+        [HttpPost]
+        public bool SaveUserSettings(UserPageModel userPageModel)
+        {
+            AuthServiceWCF.AuthService authService = new AuthServiceWCF.AuthService();
+            return authService.SaveSettingsUser(userPageModel).Status == ResultCode.Success ? true : false;
+        }
+
+        [HttpPost]
         public IActionResult FindOnlyFriends(string find, int user, int conversation)
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
             return PartialView("FindFriendsAdd", chatService.FindOnlyFriends(find, user, conversation));
+        }
+
+        [HttpPost]
+        public bool AddUserToConversation(int user, int friend, int conversation)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return chatService.AddFriendToConversation(user, friend, conversation);
         }
 
         [HttpPost]
