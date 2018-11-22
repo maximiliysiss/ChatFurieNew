@@ -53,7 +53,7 @@
 </div>
 
 <div class="f-column column">
-    <div class="user-info">
+    <div id="userSettings" class="user-info">
         <img src="~/images/DefaultUserImg.png" class="img40" />
         <span>@Html.StringLengthValidate(user.Login)</span>
         <img src="~/images/condition-on.jpg" class="img10" />
@@ -127,6 +127,18 @@
         var isModalOpen = false;
 
 
+        $('#userSettings').click(function () {
+            AjaxPost({ user: "@userID" }, "@Url.Action("LoadUserSettings", "Home")", function (e) {
+                $('#s-column').html(e);
+                $('#saveUserSettings').click(function (e) {
+                    var userData = $('#userSettingsForm').serialize();
+                    AjaxPost({ userData }, $('#userSettingsForm').attr("action"), function (e) {
+                        toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
+                    });
+                });
+            });
+        });
+
         function GetStartPage() {
             $("#s-column").html('<img style="width:100%" />');
         }
@@ -171,6 +183,13 @@
                         return;
                     AjaxPost({ find: text, user: "@userID", conversation: $(conversation).attr("name") }, "@Url.Action("FindOnlyFriends")", function (e) {
                         $(modalAddUserContent).html(e);
+                        $('.contact-find-add').click(function () {
+                            var userID = $(this).attr("id");
+                            AjaxPost({ user: "@userID", friend: userID, conversation: $(conversation).attr("name") }, "@Url.Action("AddUserToConversation", "Home")", function (e) {
+                                toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
+                                $(modalAddUser).modal("hide");
+                            });
+                        });
                     });
                 });
             });

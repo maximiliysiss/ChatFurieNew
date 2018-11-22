@@ -1,0 +1,59 @@
+﻿@model UserPageModel
+
+<style>
+    .user-page {
+        overflow-y: auto;
+        padding: 10px 50px 10px 50px;
+        background-color: #696969;
+    }
+
+        .user-page > div {
+            padding: 20px 50px 20px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+</style>
+
+<form id="userSettingsForm" action="@Url.Action("SaveUserSettings", "Home")" method="post">
+    <div class="user-page">
+        <div>
+            <div>
+                <div>
+                    @Html.LabelFor(x => x.Email)
+                    @Html.TextBoxFor(x => x.Email)
+                </div>
+                <div>
+                    @Html.LabelFor(x => x.Login)
+                    @Html.TextBoxFor(x => x.Login)
+                </div>
+            </div>
+            <div>
+                <div>
+                    @Html.LabelFor(x => x.Name)
+                    @Html.TextBoxFor(x => x.Name)
+                </div>
+            </div>
+            <div>
+                <div>
+                    @Html.LabelFor(x => x.ChangePassword)
+                    @Html.TextBoxFor(x => x.ChangePassword)
+                </div>
+                <div>
+                    @Html.LabelFor(x => x.ConfirmedPassword)
+                    @Html.TextBoxFor(x => x.ConfirmedPassword)
+                </div>
+            </div>
+            <div>
+                <div>
+                    @Html.LabelFor(x => x.VerifyPassword)
+                    @Html.TextBoxFor(x => x.VerifyPassword)
+                </div>
+            </div>
+            <div>
+                <input id="saveUserSettings" class="btn btn-submit btn-success" value="Save" />
+            </div>
+        </div>
+    </div>
+</form>

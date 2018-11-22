@@ -103,7 +103,7 @@ namespace ChatWCF
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             var conversationDB = chatContextWCF.Conversation.Find(conversation);
             return new ConversationInfo(conversationDB,
-                chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation).Select(x => x.User).ToList())
+                chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation && x.UserID != user).Select(x => x.User).ToList())
             { IsCurrentUserAdmin = conversationDB.CreatorID == user };
         }
 
