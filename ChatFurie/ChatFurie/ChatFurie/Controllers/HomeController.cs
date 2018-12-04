@@ -51,7 +51,7 @@ namespace ChatFurie.Controllers
         }
 
         [HttpPost]
-        public bool SaveUserSettings(UserPageModel userPageModel)
+        public bool SaveUserSettings([FromForm]UserPageModel userPageModel)
         {
             AuthServiceWCF.AuthService authService = new AuthServiceWCF.AuthService();
             return authService.SaveSettingsUser(userPageModel).Status == ResultCode.Success ? true : false;
@@ -125,6 +125,13 @@ namespace ChatFurie.Controllers
         {
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
             return PartialView("Conversation", chatService.GetConversation(user, conversation));
+        }
+
+        [HttpPost]
+        public bool ReadMessage(int message, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return chatService.ReadMessage(message, user);
         }
 
         [HttpPost]

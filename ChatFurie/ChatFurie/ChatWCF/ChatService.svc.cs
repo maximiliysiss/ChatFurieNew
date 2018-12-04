@@ -9,6 +9,7 @@ using ChatWCF.Models;
 using ChatWCF.Models.SendModels;
 using Microsoft.EntityFrameworkCore;
 using ChatWCF.ServicesAddings;
+using System.Threading.Tasks;
 
 namespace ChatWCF
 {
@@ -200,7 +201,19 @@ namespace ChatWCF
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             var conversationEntity = chatContextWCF.Conversation.Find(conversation);
             var conversationDB = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
-            return new ConversationUserSM(conversationDB) { ConversationID = conversation, IsAdmin = user == conversationEntity.CreatorID };
+            var conversationUserMessage = chatContextWCF.ConversationMessages.Where(x => x.ConversationID == conversation)
+                .OrderBy(x => x.DateTime).Take(20);
+            var t = chatContextWCF.UserReadMessages.Where(x => x.UserID == user
+            && conversationUserMessage.Select(y => y.ID).Contains(x.ConversationMessageID));
+            var userCreators = chatContextWCF.Users.Where(x => conversationUserMessage.Select(y => y.AuthorID).Contains(x.ID));
+            return new ConversationUserSM(conversationDB)
+            {
+                ConversationID = conversation,
+                IsAdmin = user == conversationEntity.CreatorID,
+                ConversationMessageSMs = conversationUserMessage.Select(x =>
+                        new ConversationMessageSM(x, t.FirstOrDefault(y => y.ConversationMessageID == x.ID).IsRead,
+                        userCreators.FirstOrDefault(y => y.ID == x.AuthorID).Name)).ToList()
+            };
         }
 
         public NotificationSM GetNotification(int user, int notification)
@@ -211,7 +224,7 @@ namespace ChatWCF
             if (common == null)
             {
                 notificationSM = chatContextWCF.AddFriendNotifications.Where(x => x.ID == notification)
-                    .Select(x => new NotificationSM(x, x.UserTo)).FirstOrDefault();
+                    .Select(x => new NotificationSM(x, x.UserTo) { CreatorID = x.UserFromID }).FirstOrDefault();
                 return notificationSM;
             }
             return new NotificationSM(common as CommonNotification);
@@ -221,7 +234,7 @@ namespace ChatWCF
         {
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             List<NotificationSM> notifications = chatContextWCF.AddFriendNotifications
-                .Where(x => !x.IsRead && x.UserToID == user).Take(20).Select(x => new NotificationSM(x, x.UserFrom)).ToList();
+                .Where(x => !x.IsRead && x.UserToID == user).Take(20).Select(x => new NotificationSM(x, x.UserFrom) { CreatorID = x.UserFromID }).ToList();
             notifications.AddRange(chatContextWCF.CommonNotifications
                 .Where(x => !x.IsRead && x.UserID == user).Take(20).Select(x => new NotificationSM(x)));
             notifications.OrderByDescending(x => x.DateTime);
@@ -263,6 +276,47 @@ namespace ChatWCF
             if (f)
                 chatContextWCF.SaveChanges();
 
+            return true;
+        }
+
+        public List<int> GetUsersInConversation(int conversation, int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            return chatContextWCF.UserInConversation.Where(x => x.ConversationID == conversation).Select(x => x.UserID).ToList();
+        }
+
+        public async Task<int> SendMessageToUser(int conversation, int user, string message)
+        {
+            ChatContextWCF chatContext = new ChatContextWCF();
+            var usersInConversations = chatContext.UserInConversation.Where(x => x.ConversationID == conversation);
+            ConversationMessage conversationMessage = new ConversationMessage()
+            {
+                AuthorID = user,
+                Content = message,
+                ConversationID = conversation,
+                DateTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+        };
+            await chatContext.ConversationMessages.AddAsync(conversationMessage);
+            foreach (var userInConversation in usersInConversations)
+            {
+                await chatContext.UserReadMessages.AddAsync(new UserReadMessage
+                {
+                    ConversationMessage = conversationMessage,
+                    IsRead = userInConversation.UserID == user,
+                    UserID = userInConversation.UserID
+                });
+            }
+            await chatContext.SaveChangesAsync();
+            return conversationMessage.ID;
+        }
+
+        public bool ReadMessage(int message, int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var messageEntity = chatContextWCF.UserReadMessages.First(x => x.ConversationMessageID == message && x.UserID == user);
+            messageEntity.IsRead = true;
+            chatContextWCF.Entry(messageEntity).State = EntityState.Modified;
+            chatContextWCF.SaveChanges();
             return true;
         }
     }

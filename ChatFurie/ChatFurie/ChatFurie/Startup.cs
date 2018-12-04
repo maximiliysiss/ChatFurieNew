@@ -65,6 +65,9 @@ namespace ChatFurie
             app.UseCookiePolicy();
             app.UseAuthentication();
 
+            app.UseWebSockets();
+            app.UseMiddleware<MessageSocketTransform>();
+
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
@@ -78,8 +81,6 @@ namespace ChatFurie
             app.AddNLogWeb();
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            //app.UseMiddleware<MessageSocketTransform>();
-            app.UseWebSockets();
         }
     }
 }

@@ -2,10 +2,13 @@
 using ChatWCF.Models;
 using ChatWCF.Models.SendModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatWCF
@@ -28,6 +31,9 @@ namespace ChatWCF
         [OperationContract]
         List<ConversationUserSM> ConversationUserList(int ID);
 
+        [OperationContract]
+        bool ReadMessage(int message, int user);
+        
         [OperationContract]
         int AcceptFriend(int user, int newFriend);
 
@@ -57,5 +63,11 @@ namespace ChatWCF
 
         [OperationContract]
         bool ChangeConversationAdmin(int conversation, ChatContextWCF chatContextWCF = null, int user = -1);
+
+        [OperationContract]
+        List<int> GetUsersInConversation(int conversation, int user);
+
+        [OperationContract]
+        Task<int> SendMessageToUser(int conversation, int user, string message);
     }
 }

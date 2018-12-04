@@ -31,5 +31,8 @@ namespace ChatWCF.Models.SendModels
 
         [DataMember]
         public DateTime DateTime { get; set; }
+
+        [DataMember]
+        public int CreatorID { get; set; }
     }
 }

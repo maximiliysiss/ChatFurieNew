@@ -66,7 +66,7 @@ namespace AuthServiceWCF
         {
             ChatContext chatContext = new ChatContext();
             var user = chatContext.Users.Find(userPageModel.ID);
-            if (user.PasswordHash != CryptService.GetMd5Hash(userPageModel.VerifyPassword))
+            if (user.PasswordHash != CryptService.GetMd5Hash(userPageModel.VerifyPassword ?? ""))
                 return new LoginActionResult { Id = user.ID.ToString(), Status = ResultCode.ErrorLoginPassword };
             if (userPageModel.ChangePassword.Trim().Length > 0)
                 user.PasswordHash = CryptService.GetMd5Hash(userPageModel.ChangePassword);

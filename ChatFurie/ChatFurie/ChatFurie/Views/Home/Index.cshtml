@@ -20,6 +20,16 @@
     .modal-content {
         padding: 20px;
     }
+
+    .call-input-body {
+        display: flex;
+        flex-direction: row;
+        padding: 10px 30px 10px 30px;
+    }
+
+        .call-input-body > span {
+            padding-left: 20px;
+        }
 </style>
 
 <div class="modal fade" id="modalWindow" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
@@ -36,6 +46,22 @@
                 <input id="search-input-add-conversation" type="text" />
             </div>
             <div id="modalContent-AddUser"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalWindow-CallInput" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div id="modalContent-tmp" class="modal-content">
+            <div class="call-input-body">
+                <span>
+                    <img src="~/images/call.png" class="img40" />
+                </span>
+                <span>
+                    <img src="~/images/call-end.png" class="img40" />
+                </span>
+                <span id="call-input-name"></span>
+            </div>
         </div>
     </div>
 </div>
@@ -76,7 +102,9 @@
     </div>
 </div>
 <div id="s-column" class="s-column column">
-    <img style="width:100%" />
+    <div style="height:100%; display: flex; flex-direction:column; justify-content:center;">
+        <img style="width:100%" src="~/images/startImage.jpg" />
+    </div>
 </div>
 
 
@@ -116,6 +144,7 @@
         var modalAddUser = $('#modalWindow-AddUser');
         var modalAddUserContent = $('#modalContent-AddUser')
 
+        var messageBox = null;
 
         $(modalWindow).on("hidden.bs.modal", function () { isModalOpen = false; });
         $(modalAddUser).on("hidden.bs.modal", function () {
@@ -127,20 +156,113 @@
         var isModalOpen = false;
 
 
+        var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        var wsUri = protocol + "//" + window.location.host;
+        var socket = new WebSocket(wsUri);
+        socket.onopen = e => {
+           var jsonStart = '{"user":"@userID"}';
+           socket.send(jsonStart);
+           console.log("socket opened", e);
+         };
+
+         socket.onclose = function (e) {
+             console.log("socket closed", e);
+         };
+
+        socket.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            switch (data["type"]) {
+                case "messanger":
+                    if (messageBox !== null) {
+                        if (data["conversation"] === $(messageBox).attr('name')) {
+                            var newMsg = document.createElement("div");
+                            $(newMsg).attr('class', 'message-box-message' + (data["author"] === @userID ? '' : ' unread-message'));
+                            $(newMsg).attr('id', data["id"]);
+                            var date = document.createElement("div");
+                            $(date).attr("class", 'date');
+                            $(date).html(data["date"]);
+                            var user = document.createElement('div');
+                            $(user).attr("class", 'user');
+                            $(user).html(data["user"]);
+                            var content = document.createElement('div');
+                            $(content).attr("class", 'content');
+                            $(content).html(data["content"]);
+
+                            $(newMsg).append(date);
+                            $(newMsg).append(user);
+                            $(newMsg).append(content);
+
+                            $(messageBox).append(newMsg);
+                        }
+                    }
+                    break;
+                case "notification":{
+                        switch (data["method"]) {
+                            case 0:
+                                LoadConversations();
+                                break;
+                            case 1:
+                                LoadNotifications();
+                                break;
+                            case 2:
+                                break;
+                            case 3:
+                                break;
+                        }
+                    }
+                    break;
+            }
+        };
+
+         socket.onerror = function (e) {
+             console.error(e.data);
+             toastr["error"](e.data);
+         };
+
+        function SendNotification(userId, notifType) {
+            var json = new Object();
+            json["type"] = 'notification';
+            json["method"] = notifType;
+            json["userTo"] = userId;
+
+            socket.send(JSON.stringify(json).toString());
+        }
+
+        function StartCall(userId) {
+
+        }
+
+        var isActive;
+
+        window.onfocus = function () {
+            isActive = true;
+        };
+
+        window.onblur = function () {
+            isActive = false;
+        };
+
+        setInterval(function () {
+            if (isActive) {
+                $('.message-box-message.unread-message').each(function (i,obj) {
+                    $(obj).attr('class', 'message-box-message');
+                    AjaxPost({ message: $(obj).attr("id"), user: "@userID" }, "@Url.Action("ReadMessage", "Home")", function (e) {
+                    });
+                });
+            }
+        },1000);
+
         $('#userSettings').click(function () {
             AjaxPost({ user: "@userID" }, "@Url.Action("LoadUserSettings", "Home")", function (e) {
                 $('#s-column').html(e);
                 $('#saveUserSettings').click(function (e) {
-                    var userData = $('#userSettingsForm').serialize();
-                    AjaxPost({ userData }, $('#userSettingsForm').attr("action"), function (e) {
-                        toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
-                    });
+                    $('#userSettingsForm').submit();
                 });
             });
         });
 
         function GetStartPage() {
-            $("#s-column").html('<img style="width:100%" />');
+            $("#s-column").html('<img style="width:100%" src="~/images/startImage.jpg" />');
         }
 
         function LoadConversations() {
@@ -187,6 +309,7 @@
                             var userID = $(this).attr("id");
                             AjaxPost({ user: "@userID", friend: userID, conversation: $(conversation).attr("name") }, "@Url.Action("AddUserToConversation", "Home")", function (e) {
                                 toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
+                                if (e) SendNotification(userID, 1);
                                 $(modalAddUser).modal("hide");
                             });
                         });
@@ -202,19 +325,23 @@
                     $("#s-column").html(e);
                     $("#acceptFriend").click(function () {
                         var id = $(this).attr("name");
+                        var creatorId = $('#notification-creatorID').val();
                         AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("AcceptFriend","Home")",
                             function (e) {
                                 OpenConversation(e);
                                 LoadNotifications();
                                 LoadConversations();
+                                SendNotification(creatorId, 0);
                             });
                     });
                     $("#declineFriend").click(function () {
                         var id = $(this).attr("name");
+                        var creatorId = $('#notification-creatorID').val();
                         AjaxPost({ "user": "@userID", "notification": id }, "@Url.Action("DeclineFriend","Home")",
                             function (e) {
                                 GetStartPage();
                                 LoadNotifications();
+                                SendNotification(creatorId, 0);
                             });
                     });
                 });
@@ -257,6 +384,7 @@
                         else {
                             toastr["success"]("Success adding");
                             OpenContact(nUser);
+                            SendNotification(nUser, 1);
                         }
                     });
             });
@@ -296,8 +424,11 @@
         function OpenConversation(id) {
             AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("OpenConversation", "Home")",
                 function (e) {
+
                     $("#s-column").html(e);
                     /// Realize
+
+                    messageBox = $('#message-box');
 
                     $(".header-info").click(function () {
                         LoadInfoAboutConversation(this);
@@ -305,6 +436,15 @@
 
                     $('#addUserToConversation').click(function () {
                         AddUserToCoversation(this);
+                    });
+
+                    $('#msg-input').keypress(function (e) {
+                        if (e.keyCode === 13) {
+                            var json = '{"type" : "messanger", "method": "sendMessage", "conversation":"'
+                                + $(this).attr('name') + '",content:"' + $(this).val() + '"}';
+                            socket.send(json);
+                            $(this).val('');
+                        }
                     });
 
                     $('#outFromConversation').click(function () {

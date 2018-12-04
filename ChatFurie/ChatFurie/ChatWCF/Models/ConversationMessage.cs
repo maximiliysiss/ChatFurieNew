@@ -16,7 +16,7 @@ namespace ChatWCF.Models
 
         public string Content { get; set; }
 
-        public DateTime DateTime { get; set; }
+        public string DateTime { get; set; }
 
         public int AuthorID { get; set; }
         public User Author { get; set; }

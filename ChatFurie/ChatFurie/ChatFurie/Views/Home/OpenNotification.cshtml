@@ -20,6 +20,7 @@
     <span class="notification-show-text">@Model.Context</span>
     <span>
         <input name="@Model.ID" class="btn btn-danger" id="acceptFriend" type="button" value="Accept" />
+        <input value="@Model.CreatorID" type="hidden" id="notification-creatorID" />
         <input name="@Model.ID" class="btn btn-success" id="declineFriend" type="button" value="Decline" />
     </span>
 </div>

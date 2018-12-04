@@ -2,9 +2,9 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace ChatFurie.Migrations
+namespace ChatWCF.Migrations
 {
-    public partial class Correct : Migration
+    public partial class Init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -18,7 +18,7 @@ namespace ChatFurie.Migrations
                     PasswordHash = table.Column<string>(nullable: true),
                     LastEnter = table.Column<DateTime>(nullable: false),
                     Login = table.Column<string>(nullable: true),
-                    Image = table.Column<string>(nullable: true, defaultValue: "/DefaultIconAccount.png"),
+                    Image = table.Column<string>(nullable: true, defaultValue: "DefaultIconAccount.png"),
                     Email = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -34,6 +34,7 @@ namespace ChatFurie.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Context = table.Column<string>(nullable: true),
                     DateTime = table.Column<DateTime>(nullable: false),
+                    IsRead = table.Column<bool>(nullable: false),
                     UserID = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -76,10 +77,11 @@ namespace ChatFurie.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Context = table.Column<string>(nullable: true),
                     DateTime = table.Column<DateTime>(nullable: false),
+                    IsRead = table.Column<bool>(nullable: false),
                     UserFromID = table.Column<int>(nullable: false),
                     UserToID = table.Column<int>(nullable: false),
                     IsDialog = table.Column<bool>(nullable: false),
-                    DialogID = table.Column<int>(nullable: false)
+                    DialogID = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,13 +91,13 @@ namespace ChatFurie.Migrations
                         column: x => x.DialogID,
                         principalTable: "Conversation",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AddFriendNotifications_Users_UserFromID",
                         column: x => x.UserFromID,
                         principalTable: "Users",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_AddFriendNotifications_Users_UserToID",
                         column: x => x.UserToID,
@@ -112,7 +114,7 @@ namespace ChatFurie.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     ConversationID = table.Column<int>(nullable: false),
                     Content = table.Column<string>(nullable: true),
-                    DateTime = table.Column<DateTime>(nullable: false),
+                    DateTime = table.Column<string>(nullable: true),
                     AuthorID = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -140,7 +142,7 @@ namespace ChatFurie.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     UserID = table.Column<int>(nullable: false),
                     ConversationID = table.Column<int>(nullable: false),
-                    Image = table.Column<string>(nullable: true),
+                    Image = table.Column<string>(nullable: true, defaultValue: "DefaultIconAccount.png"),
                     DateStart = table.Column<DateTime>(nullable: false),
                     Name = table.Column<string>(nullable: true)
                 },

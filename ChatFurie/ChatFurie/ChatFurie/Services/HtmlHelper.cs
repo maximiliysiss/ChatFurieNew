@@ -1,4 +1,5 @@
 ﻿using AuthServiceWCF.Helpers;
+using ChatFurie.Middleware.Sockets;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -18,8 +19,8 @@ namespace ChatFurie.Services
 
         public static string GetUserCondition(this IHtmlHelper htmlHelper, int id)
         {
-            AuthServiceWCF.Models.ChatContext chatContext = new AuthServiceWCF.Models.ChatContext();
-            throw new NotImplementedException();
+            MessageSocketTransform.Sockets.TryGetValue(id, out var socket);
+            return $"condition-{(socket == null ? "off" : "on")}";
         }
     }
 }
