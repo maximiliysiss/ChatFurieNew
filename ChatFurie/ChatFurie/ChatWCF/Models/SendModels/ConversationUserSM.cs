@@ -30,5 +30,8 @@ namespace ChatWCF.Models.SendModels
 
         [DataMember]
         public int CreatorID { get; set; }
+
+        [DataMember]
+        public List<ConversationMessageSM> ConversationMessageSMs { get; set; }
     }
 }

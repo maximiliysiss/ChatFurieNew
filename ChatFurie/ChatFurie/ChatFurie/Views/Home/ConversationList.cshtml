@@ -8,7 +8,7 @@
         <span id="@obj.ID">@Html.StringLengthValidate(obj.Name)</span>
         @if (!obj.IsConversation)
         {
-            <img id="@obj.ID" src="~/images/condition-on.jpg" class="img10" />
+            <img id="@obj.ID" src="~/images/@(Html.GetUserCondition(obj.ID)).jpg" class="img10" />
         }
     </div>
 }

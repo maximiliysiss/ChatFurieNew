@@ -14,7 +14,10 @@ namespace ChatFurie.Middleware.Sockets
 {
     public class MessageSocketTransform
     {
-        public static ConcurrentDictionary<string, WebSocket> _sockets = new ConcurrentDictionary<string, WebSocket>();
+        private static ConcurrentDictionary<int, WebSocket> _sockets = new ConcurrentDictionary<int, WebSocket>();
+
+        public static ConcurrentDictionary<int, WebSocket> Sockets => _sockets;
+        private ChatWCF.ChatService ChatService = new ChatWCF.ChatService();
 
         private readonly RequestDelegate _next;
 
@@ -30,41 +33,60 @@ namespace ChatFurie.Middleware.Sockets
                 await _next.Invoke(context);
                 return;
             }
+
             CancellationToken ct = context.RequestAborted;
             WebSocket currentSocket = await context.WebSockets.AcceptWebSocketAsync();
             var response = await ReceiveStringAsync(currentSocket, ct);
-            if (string.IsNullOrEmpty(response))
-                if (currentSocket.State != WebSocketState.Open)
-                {
-                    await currentSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
-                    currentSocket.Dispose();
-                    return;
-                }
-            JObject startObject = JObject.Parse(response);
-            var socketId = startObject["user"].ToString();
-            _sockets.TryAdd(socketId, currentSocket);
+            JObject jObject = JObject.Parse(response);
+            int userId = jObject["user"].Value<int>();
+
+            _sockets.TryAdd(userId, currentSocket);
+
             while (true)
             {
                 if (ct.IsCancellationRequested)
+                {
                     break;
+                }
+
                 response = await ReceiveStringAsync(currentSocket, ct);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (currentSocket.State != WebSocketState.Open)
+                    {
                         break;
+                    }
+
                     continue;
                 }
-                JObject jObject = JObject.Parse(response);              
+
+                JObject jResponse = JObject.Parse(response);
+                string type = jResponse["type"].Value<string>();
+                string method = jResponse["method"].Value<string>();
+                switch (type)
+                {
+                    case "messanger":
+                        SocketHandler.Messanger(method, jResponse, userId, ct);
+                        break;
+                    case "notification":
+                        SocketHandler.Notification(method, jResponse, userId, ct);
+                        break;
+                    case "video-message":
+                        SocketHandler.VideoMessage(method, jResponse, userId, ct);
+                        break;
+                }
+
             }
 
             WebSocket dummy;
-            _sockets.TryRemove(socketId, out dummy);
+            _sockets.TryRemove(userId, out dummy);
 
-            await currentSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
+            if (currentSocket.State == WebSocketState.Connecting || currentSocket.State == WebSocketState.Open)
+                await currentSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
             currentSocket.Dispose();
         }
 
-        private static Task SendStringAsync(WebSocket socket, string data, CancellationToken ct = default(CancellationToken))
+        public static Task SendStringAsync(WebSocket socket, string data, CancellationToken ct = default(CancellationToken))
         {
             var buffer = Encoding.UTF8.GetBytes(data);
             var segment = new ArraySegment<byte>(buffer);

@@ -62,6 +62,41 @@
     .search > .msg-line-background {
         background-image: url("/images/send.png");
     }
+
+    .messages-box {
+        overflow-y: auto;
+    }
+
+    .message-box-message {
+        padding: 5px 10px 5px 10px;
+        display: flex;
+        flex-direction: row;
+    }
+
+        .message-box-message > .date {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 20%;
+        }
+
+        .message-box-message > .user {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 20%;
+        }
+
+        .message-box-message > .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 60%;
+        }
+
+    .unread-message {
+        background-color: #d6d6d6;
+    }
 </style>
 
 <div class="header-info" id="@Model.ID">
@@ -77,6 +112,12 @@
     }
     <span class="push"></span>
     <span class="div-img">
+        <img name="@Model.ID" src="~/images/call.png" id="startCalling" class="img40" />
+    </span>
+    <span class="div-img" style="display:none">
+        <img name="@Model.ID" src="~/images/call-end.png" id="endCalling" class="img40" />
+    </span>
+    <span class="div-img">
         <img name="@Model.ID" src="~/images/deleteIcon.png" id="outFromConversation" class="img40" />
     </span>
     @if (Model.IsAdmin)
@@ -91,10 +132,19 @@
 </div>
 
 <div class="messages">
-    <div class="messages-box"></div>
+    <div id="message-box" name="@Model.ConversationID" class="messages-box">
+        @foreach (var message in Model.ConversationMessageSMs)
+        {
+            <div id="@message.ID" class="message-box-message @(message.IsRead?"":"unread-message")">
+                <div class="date">@message.Time</div>
+                <div class="user">@message.Sender:</div>
+                <div class="content">@message.Content</div>
+            </div>
+        }
+    </div>
     <div class="messages-line">
         <div class="search">
-            <input id="msg-input" class="msg-line-background" type="text" />
+            <input name="@Model.ConversationID" id="msg-input" class="msg-line-background" type="text" />
         </div>
     </div>
 </div>

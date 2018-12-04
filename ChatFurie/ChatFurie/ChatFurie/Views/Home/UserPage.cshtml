@@ -4,7 +4,10 @@
     .user-page {
         overflow-y: auto;
         padding: 10px 50px 10px 50px;
-        background-color: #696969;
+        background-color: #e8e8e8;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
 
         .user-page > div {
@@ -13,47 +16,73 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            border: 1px solid;
+            border-radius: 10px;
         }
+
+
+    .line-user-page {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .label-user-page {
+        width: 20%;
+        float: left;
+        text-align: center;
+    }
+
+    .label-text-page {
+        float: left;
+        width: 80%;
+    }
+
+    #userSettingsForm {
+        height: 100%;
+    }
 </style>
 
-<form id="userSettingsForm" action="@Url.Action("SaveUserSettings", "Home")" method="post">
+<form id="userSettingsForm" data-ajax="true" action="@Url.Action("SaveUserSettings", "Home")" method="post">
     <div class="user-page">
         <div>
-            <div>
-                <div>
-                    @Html.LabelFor(x => x.Email)
-                    @Html.TextBoxFor(x => x.Email)
-                </div>
-                <div>
-                    @Html.LabelFor(x => x.Login)
-                    @Html.TextBoxFor(x => x.Login)
-                </div>
+            @Html.HiddenFor(x => x.ID)
+            <div style="width:100%">
+                @Html.LabelFor(x => x.Email, new { @class = "label-user-page" })
+                @Html.TextBoxFor(x => x.Email, null, new { @class = "label-text-page" })
             </div>
-            <div>
-                <div>
-                    @Html.LabelFor(x => x.Name)
-                    @Html.TextBoxFor(x => x.Name)
-                </div>
-            </div>
-            <div>
-                <div>
-                    @Html.LabelFor(x => x.ChangePassword)
-                    @Html.TextBoxFor(x => x.ChangePassword)
-                </div>
-                <div>
-                    @Html.LabelFor(x => x.ConfirmedPassword)
-                    @Html.TextBoxFor(x => x.ConfirmedPassword)
-                </div>
-            </div>
-            <div>
-                <div>
-                    @Html.LabelFor(x => x.VerifyPassword)
-                    @Html.TextBoxFor(x => x.VerifyPassword)
-                </div>
-            </div>
-            <div>
-                <input id="saveUserSettings" class="btn btn-submit btn-success" value="Save" />
+            <br>
+            <div style="width:100%">
+                @Html.LabelFor(x => x.Login, new { @class = "label-user-page" })
+                @Html.TextBoxFor(x => x.Login, null, new { @class = "label-text-page" })
             </div>
         </div>
+        <br>
+        <div>
+            <div style="width:100%">
+                @Html.LabelFor(x => x.Name, new { @class = "label-user-page" })
+                @Html.TextBoxFor(x => x.Name, null, new { @class = "label-text-page" })
+            </div>
+        </div>
+        <br>
+        <div>
+            <div style="width:100%">
+                @Html.LabelFor(x => x.ChangePassword, new { @class = "label-user-page", type = "password" })
+                @Html.TextBoxFor(x => x.ChangePassword, null, new { @class = "label-text-page", type = "password" })
+            </div>
+            <br>
+            <div style="width:100%">
+                @Html.LabelFor(x => x.ConfirmedPassword, new { @class = "label-user-page", type = "password" })
+                @Html.TextBoxFor(x => x.ConfirmedPassword, null, new { @class = "label-text-page", type = "password" })
+            </div>
+        </div>
+        <br>
+        <div>
+            <div style="width:100%">
+                @Html.LabelFor(x => x.VerifyPassword, new { @class = "label-user-page", type = "password" })
+                @Html.TextBoxFor(x => x.VerifyPassword, null, new { @class = "label-text-page", type = "password" })
+            </div>
+        </div>
+        <br>
+        <input type="button" id="saveUserSettings" class="btn btn-submit btn-success" value="Save" />
     </div>
 </form>
