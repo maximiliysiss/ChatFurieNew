@@ -1,0 +1,10 @@
+﻿@model List<ConversationMessageSM>
+
+@foreach (var message in Model)
+{
+    <div id="@message.ID" class="message-box-message @(message.IsRead?"":"unread-message")">
+        <div class="date">@message.Time</div>
+        <div class="user">@message.Sender:</div>
+        <div class="content">@message.Content</div>
+    </div>
+}

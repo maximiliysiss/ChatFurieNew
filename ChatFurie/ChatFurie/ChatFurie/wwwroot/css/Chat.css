@@ -122,12 +122,12 @@
 
 .tab-header-img {
     border: 2px solid;
-    flex-direction:column;
-    justify-content:center;
-    font-weight:bold;
+    flex-direction: column;
+    justify-content: center;
+    font-weight: bold;
     color: red;
     border-radius: 45px;
-    width:23px;
+    width: 23px;
 }
 
 .tab-header:hover {
@@ -142,4 +142,17 @@
 
 .actions:hover {
     cursor: pointer;
+}
+
+
+.hover-mouse:hover {
+    cursor: pointer;
+}
+
+
+.vision {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }

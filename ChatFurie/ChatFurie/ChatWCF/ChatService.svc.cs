@@ -201,18 +201,25 @@ namespace ChatWCF
             ChatContextWCF chatContextWCF = new ChatContextWCF();
             var conversationEntity = chatContextWCF.Conversation.Find(conversation);
             var conversationDB = chatContextWCF.UserInConversation.FirstOrDefault(x => x.UserID == user && x.ConversationID == conversation);
-            var conversationUserMessage = chatContextWCF.ConversationMessages.Where(x => x.ConversationID == conversation)
-                .OrderBy(x => x.DateTime).Take(20);
-            var t = chatContextWCF.UserReadMessages.Where(x => x.UserID == user
-            && conversationUserMessage.Select(y => y.ID).Contains(x.ConversationMessageID));
-            var userCreators = chatContextWCF.Users.Where(x => conversationUserMessage.Select(y => y.AuthorID).Contains(x.ID));
+            var userMessages = chatContextWCF.UserReadMessages
+                .Where(x => x.UserID == user && x.ConversationMessage.ConversationID == conversation)
+                .Select(x => x.ConversationMessage).OrderByDescending(x => x.DateTime)
+                .Take(20).ToList();
+            var userReads = chatContextWCF.UserReadMessages
+                .Where(x => x.UserID == user && x.ConversationMessage.ConversationID == conversation);
+            List<ConversationMessageSM> usersConversations = new List<ConversationMessageSM>();
+            foreach (var conversationUserMsg in userMessages)
+            {
+                var name = chatContextWCF.Users.Find(conversationUserMsg.AuthorID);
+                usersConversations.Add(new ConversationMessageSM(conversationUserMsg,
+                    userReads.FirstOrDefault(x => x.ConversationMessageID == conversationUserMsg.ID).IsRead,
+                    name.Name));
+            }
             return new ConversationUserSM(conversationDB)
             {
                 ConversationID = conversation,
                 IsAdmin = user == conversationEntity.CreatorID,
-                ConversationMessageSMs = conversationUserMessage.Select(x =>
-                        new ConversationMessageSM(x, t.FirstOrDefault(y => y.ConversationMessageID == x.ID).IsRead,
-                        userCreators.FirstOrDefault(y => y.ID == x.AuthorID).Name)).ToList()
+                ConversationMessageSMs = usersConversations
             };
         }
 
@@ -295,7 +302,7 @@ namespace ChatWCF
                 Content = message,
                 ConversationID = conversation,
                 DateTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
-        };
+            };
             await chatContext.ConversationMessages.AddAsync(conversationMessage);
             foreach (var userInConversation in usersInConversations)
             {
@@ -318,6 +325,22 @@ namespace ChatWCF
             chatContextWCF.Entry(messageEntity).State = EntityState.Modified;
             chatContextWCF.SaveChanges();
             return true;
+        }
+
+        public List<ConversationMessageSM> GetNewMessages(int conversation, int first, int user)
+        {
+            ChatContextWCF chatContextWCF = new ChatContextWCF();
+            var userMsg = chatContextWCF.UserReadMessages.Where(x => x.ConversationMessageID < first
+                                    && x.ConversationMessage.ConversationID == conversation && x.UserID == user)
+                                    .OrderBy(x => x.ConversationMessage.DateTime).Take(20);
+            List<ConversationMessageSM> conversationMessageSMs = new List<ConversationMessageSM>();
+            foreach (var obj in userMsg)
+            {
+                var conversationMsg = chatContextWCF.ConversationMessages.Find(obj.ConversationMessageID);
+                var userName = chatContextWCF.Users.Find(conversationMsg.AuthorID).Name;
+                conversationMessageSMs.Add(new ConversationMessageSM(conversationMsg, true, userName));
+            }
+            return conversationMessageSMs;
         }
     }
 }
