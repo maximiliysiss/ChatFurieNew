@@ -69,5 +69,8 @@ namespace ChatWCF
 
         [OperationContract]
         Task<int> SendMessageToUser(int conversation, int user, string message);
+
+        [OperationContract]
+        List<ConversationMessageSM> GetNewMessages(int conversation, int first, int user);
     }
 }

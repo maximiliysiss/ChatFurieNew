@@ -24,11 +24,14 @@
     .call-input-body {
         display: flex;
         flex-direction: row;
-        padding: 10px 30px 10px 30px;
+        padding: 5px 5px 5px 5px;
     }
 
         .call-input-body > span {
             padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 </style>
 
@@ -50,15 +53,15 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalWindow-CallInput" tabindex="-1" role="dialog" aria-labelledby="ModalWindow" aria-hidden="true">
+<div class="modal fade" id="modalWindow-CallInput" tabindex="-1" role="dialog" aria-labelledby="ModalWindow">
     <div class="modal-dialog" role="document">
         <div id="modalContent-tmp" class="modal-content">
-            <div class="call-input-body">
+            <div id="call-input-body" class="call-input-body">
                 <span>
-                    <img src="~/images/call.png" class="img40" />
+                    <img id="startCall-modal" src="~/images/call.png" class="img40 hover-mouse" />
                 </span>
                 <span>
-                    <img src="~/images/call-end.png" class="img40" />
+                    <img id="declineCall-modal" src="~/images/call-end.png" class="img40 hover-mouse" />
                 </span>
                 <span id="call-input-name"></span>
             </div>
@@ -108,6 +111,10 @@
 </div>
 
 
+<div>
+    <audio id="chatAudio"></audio>
+</div>
+
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.1/js/toastr.js"></script>
@@ -142,9 +149,13 @@
         var modalChoiceNo = $('#choiceModal-No');
 
         var modalAddUser = $('#modalWindow-AddUser');
-        var modalAddUserContent = $('#modalContent-AddUser')
+        var modalAddUserContent = $('#modalContent-AddUser');
+
+        var modalInputCall = $('#modalWindow-CallInput');
+        var modalInputCallcontent = $('#call-input-name');
 
         var messageBox = null;
+        var isAccept = false;
 
         $(modalWindow).on("hidden.bs.modal", function () { isModalOpen = false; });
         $(modalAddUser).on("hidden.bs.modal", function () {
@@ -152,8 +163,15 @@
             $('#search-input-add-conversation').val("");
         });
         $(modalChoice).on("hidden.bs.modal", function () { isModalOpen = false; });
+        $(modalInputCall).on("hidden.bs.modal", function () {
+            isModalOpen = false;
+            if (!isAccept)
+                DeclineInput(userInputTry, true);
+        });
 
         var isModalOpen = false;
+        var isCurrentInput = false;
+        var userInputTry = -1;
 
 
         var protocol = location.protocol === "https:" ? "wss:" : "ws:";
@@ -169,30 +187,36 @@
              console.log("socket closed", e);
          };
 
+        function createMessage(author, id, dateMsg, userMsg, contentMsg) {
+            var newMsg = document.createElement("div");
+            $(newMsg).attr('class', 'message-box-message' + (author === @userID ? '' : ' unread-message'));
+            $(newMsg).attr('id', id);
+            var date = document.createElement("div");
+            $(date).attr("class", 'date');
+            $(date).html(dateMsg);
+            var user = document.createElement('div');
+            $(user).attr("class", 'user');
+            $(user).html(userMsg);
+            var content = document.createElement('div');
+            $(content).attr("class", 'content');
+            $(content).html(contentMsg);
+            $(newMsg).append(date);
+            $(newMsg).append(user);
+            $(newMsg).append(content);
+            return newMsg;
+        }
+
+
         socket.onmessage = function (e) {
             var data = JSON.parse(e.data);
             switch (data["type"]) {
                 case "messanger":
                     if (messageBox !== null) {
                         if (data["conversation"] === $(messageBox).attr('name')) {
-                            var newMsg = document.createElement("div");
-                            $(newMsg).attr('class', 'message-box-message' + (data["author"] === @userID ? '' : ' unread-message'));
-                            $(newMsg).attr('id', data["id"]);
-                            var date = document.createElement("div");
-                            $(date).attr("class", 'date');
-                            $(date).html(data["date"]);
-                            var user = document.createElement('div');
-                            $(user).attr("class", 'user');
-                            $(user).html(data["user"]);
-                            var content = document.createElement('div');
-                            $(content).attr("class", 'content');
-                            $(content).html(data["content"]);
-
-                            $(newMsg).append(date);
-                            $(newMsg).append(user);
-                            $(newMsg).append(content);
-
+                            var newMsg = createMessage(data['author'], data["id"], data["date"], data["user"], data["content"]);
                             $(messageBox).append(newMsg);
+                            messageBox.scrollTop = messageBox.scrollHeight;
+                            $(messageBox).scrollTop($(messageBox).prop('scrollHeight'));
                         }
                     }
                     break;
@@ -205,8 +229,16 @@
                                 LoadNotifications();
                                 break;
                             case 2:
+                                InputCall(data);
                                 break;
                             case 3:
+
+                                break;
+                            case 4:
+                                break;
+                            case 5:
+                                break;
+                            case 6:
                                 break;
                         }
                     }
@@ -217,19 +249,78 @@
          socket.onerror = function (e) {
              console.error(e.data);
              toastr["error"](e.data);
-         };
+        };
+
+        function EndCall() {
+            isCurrentInput = false;
+            $('#startCalling').css("display", "block");
+            $('#vision').html('');
+            $('#endCalling').css("display", "none");
+        }
+
+        $('#declineCall-modal').click(function () {
+            DeclineInput(userInputTry, true);
+        });
+
+        function DeclineInput(userId, isCansel = false) {
+            if (isCansel)
+                $(modalInputCall).modal('hide');
+            isCurrentInput = false;
+            var json = new Object();
+            json["type"] = 'notification';
+            json["method"] = 3;
+            json["userIn"] = @userID;
+            json["userInput"] = userId;
+            json["isCansel"] = isCansel;
+            socket.send(JSON.stringify(json).toString());
+        }
+
+
 
         function SendNotification(userId, notifType) {
             var json = new Object();
             json["type"] = 'notification';
             json["method"] = notifType;
             json["userTo"] = userId;
-
             socket.send(JSON.stringify(json).toString());
         }
 
-        function StartCall(userId) {
+        $('#startCall-modal').click(function () {
+            var json = new Object();
+            isAccept = true;
+            var video = document.getElementById('video');
 
+
+        });
+
+        function SendAccept(conversation) {
+            var json = new Object();
+            json["type"] = 'notification';
+            json["method"] = 5;
+            json["conversation"] = conversation;
+            json["user"] = @userID;
+            socket.send(JSON.stringify(json).toString());
+        }
+
+        function StartCall(conversationId) {
+            var json = new Object();
+            json["type"] = 'notification';
+            json["method"] = 2;
+            json["conversation"] = conversationId;
+            json["user"] = @userID;
+            socket.send(JSON.stringify(json).toString());
+            isModalOpen = true;
+        }
+
+        function InputCall(data) {
+            if (isCurrentInput) {
+                DeclineInput(data["userStart"], true);
+            }
+            $(modalInputCallcontent).html(data["name"]);
+            $(modalInputCallcontent).attr('name', data['conversation']);
+            $(modalInputCall).modal("show");
+            userInputTry = data["userStart"];
+            isCurrentInput = true;
         }
 
         var isActive;
@@ -298,6 +389,14 @@
             isModalOpen = true;
             AjaxPost({ find: "", user: "@userID", conversation: $(conversation).attr("name") }, "@Url.Action("FindOnlyFriends")", function (e) {
                 $(modalAddUserContent).html(e);
+                $('.user-info.contact-find-add').click(function () {
+                            var userID = $(this).attr("id");
+                            AjaxPost({ user: "@userID", friend: userID, conversation: $(conversation).attr("name") }, "@Url.Action("AddUserToConversation", "Home")", function (e) {
+                                toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
+                                if (e) SendNotification(userID, 1);
+                                $(modalAddUser).modal("hide");
+                            });
+                        });
                 $(modalAddUser).modal("show");
                 $('#search-input-add-conversation').keyup(function () {
                     var text = $(this).val().trim();
@@ -305,7 +404,7 @@
                         return;
                     AjaxPost({ find: text, user: "@userID", conversation: $(conversation).attr("name") }, "@Url.Action("FindOnlyFriends")", function (e) {
                         $(modalAddUserContent).html(e);
-                        $('.contact-find-add').click(function () {
+                        $('.user-info.contact-find-add').click(function () {
                             var userID = $(this).attr("id");
                             AjaxPost({ user: "@userID", friend: userID, conversation: $(conversation).attr("name") }, "@Url.Action("AddUserToConversation", "Home")", function (e) {
                                 toastr[e ? "success" : "error"]("Add " + (e ? "success" : "error"));
@@ -429,6 +528,17 @@
                     /// Realize
 
                     messageBox = $('#message-box');
+                    $(messageBox).scrollTop($(messageBox).prop('scrollHeight'));
+
+                    $(messageBox).on('scroll', function () {
+                        if ($(this).scrollTop() == 0) {
+                            var top = $('.message-box-message').first().attr('id');
+                            AjaxPost({ conversation: $(this).attr('name'), first: top, user:"@userID" }, "@Url.Action("GetAddingsMsg", "Home")", function (e) {
+                                var html = $(messageBox).html();
+                                $(messageBox).html(e + html);
+                            });
+                        }
+                    });
 
                     $(".header-info").click(function () {
                         LoadInfoAboutConversation(this);
@@ -436,6 +546,13 @@
 
                     $('#addUserToConversation').click(function () {
                         AddUserToCoversation(this);
+                    });
+
+                    $('#startCalling').click(function () {
+                        $(this).css("display", "none");
+                        $('#endCalling').css("display", "block");
+                        StartCall($(this).attr("name"));
+                        $('#vision').html('<img style="height:100%" src="/images/phone_calling.gif"/>');
                     });
 
                     $('#msg-input').keypress(function (e) {

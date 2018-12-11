@@ -112,23 +112,23 @@
     }
     <span class="push"></span>
     <span class="div-img">
-        <img name="@Model.ID" src="~/images/call.png" id="startCalling" class="img40" />
-    </span>
-    <span class="div-img" style="display:none">
-        <img name="@Model.ID" src="~/images/call-end.png" id="endCalling" class="img40" />
+        <img name="@Model.ID" src="~/images/call.png" id="startCalling" class="img40 hover-mouse" />
     </span>
     <span class="div-img">
-        <img name="@Model.ID" src="~/images/deleteIcon.png" id="outFromConversation" class="img40" />
+        <img name="@Model.ID" src="~/images/call-end.png" id="endCalling" class="img40 hover-mouse" style="display:none" />
+    </span>
+    <span class="div-img">
+        <img name="@Model.ID" src="~/images/deleteIcon.png" id="outFromConversation" class="img40 hover-mouse" />
     </span>
     @if (Model.IsAdmin)
     {
         <span>
-            <img name="@Model.ID" style="border-radius:60px" id="addUserToConversation" src="~/images/addIcon.jpg" class="img40" />
+            <img name="@Model.ID" style="border-radius:60px" id="addUserToConversation" src="~/images/addIcon.jpg" class="img40 hover-mouse" />
         </span>
     }
 </div>
 
-<div class="vision">
+<div id="vision" class="vision">
 </div>
 
 <div class="messages">

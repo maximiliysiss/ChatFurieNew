@@ -24,7 +24,9 @@
         @Html.PasswordFor(x => x.Password, new { @class = "input-text" })
 
         <input class="btn btn-success btn-submit" type="submit" value="Login" />
+        @Html.ActionLink("Register", "Register", "Account", new { }, new { @class = "btn btn-success btn-submit" })
     }
+
 
 </div>
 

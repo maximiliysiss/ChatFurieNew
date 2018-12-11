@@ -154,5 +154,12 @@ namespace ChatFurie.Controllers
             ChatWCF.ChatService chatService = new ChatWCF.ChatService();
             return chatService.ChangeConversationAdmin(conversation, null, user);
         }
+
+        [HttpPost]
+        public IActionResult GetAddingsMsg(int conversation, int first, int user)
+        {
+            ChatWCF.ChatService chatService = new ChatWCF.ChatService();
+            return PartialView("MessageBoxGenerator", chatService.GetNewMessages(conversation, first, user));
+        }
     }
 }

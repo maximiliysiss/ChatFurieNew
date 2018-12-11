@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ChatFurie.Middleware.Models;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -12,14 +13,50 @@ using System.Threading.Tasks;
 
 namespace ChatFurie.Middleware.Sockets
 {
+
     public class MessageSocketTransform
     {
         private static ConcurrentDictionary<int, WebSocket> _sockets = new ConcurrentDictionary<int, WebSocket>();
+        private static Dictionary<int, VideoChatRoom> _chatRooms = new Dictionary<int, VideoChatRoom>();
 
+        public static Dictionary<int, VideoChatRoom> ChatRooms => _chatRooms;
         public static ConcurrentDictionary<int, WebSocket> Sockets => _sockets;
         private ChatWCF.ChatService ChatService = new ChatWCF.ChatService();
 
         private readonly RequestDelegate _next;
+
+        public static void DeleteUserFromChatRoom(int ws)
+        {
+            foreach (var room in ChatRooms)
+                if (room.Value.IsUser(ws))
+                {
+                    room.Value.DeleteUser(ws);
+                    if (room.Value.Count == 0)
+                        ChatRooms.Remove(room.Key);
+                }
+        }
+
+        public static void ValidateRoom(int conversation, CancellationToken ct)
+        {
+            if (ChatRooms.TryGetValue(conversation, out var room))
+            {
+                if (room.NeedToDelete())
+                {
+                    room.Deleting(conversation, ct);
+                    ChatRooms.Remove(conversation);
+                }
+            }
+        }
+
+        public static void DeleteUserFromChatRoom(int ws, int conversation)
+        {
+            if (ChatRooms.TryGetValue(conversation, out var room))
+            {
+                room.DeleteUser(ws);
+                if (room.Count == 0)
+                    ChatRooms.Remove(conversation);
+            }
+        }
 
         public MessageSocketTransform(RequestDelegate next)
         {
@@ -80,7 +117,7 @@ namespace ChatFurie.Middleware.Sockets
 
             WebSocket dummy;
             _sockets.TryRemove(userId, out dummy);
-
+            DeleteUserFromChatRoom(userId);
             if (currentSocket.State == WebSocketState.Connecting || currentSocket.State == WebSocketState.Open)
                 await currentSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
             currentSocket.Dispose();

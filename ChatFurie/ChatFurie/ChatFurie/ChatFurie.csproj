@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <Folder Include="Database Diagrams\" />
+    <Folder Include="wwwroot\sounds\" />
   </ItemGroup>
 
 </Project>
