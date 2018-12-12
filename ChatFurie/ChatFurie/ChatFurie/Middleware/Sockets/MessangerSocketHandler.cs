@@ -12,7 +12,7 @@ namespace ChatFurie.Middleware.Sockets
     {
         public enum NotificationType
         {
-            Common, Conversation, CallStart, CallEnd, CallAccess, CallDecline, Backway
+            Common, Conversation, CallStart, CallEnd, CallAccess, CallDecline, Backway, RoomIsReady
         }
 
         public static ChatWCF.ChatService ChatService = new ChatWCF.ChatService();
@@ -66,7 +66,7 @@ namespace ChatFurie.Middleware.Sockets
                         VideoChatRoom videoChatRoom = null;
                         if (!MessageSocketTransform.ChatRooms.TryGetValue(conversation, out videoChatRoom))
                         {
-                            videoChatRoom = new VideoChatRoom();
+                            videoChatRoom = new VideoChatRoom() { Conversation = conversation };
                             MessageSocketTransform.ChatRooms.Add(conversation, videoChatRoom);
                         }
                         foreach (var user in users)
@@ -85,7 +85,8 @@ namespace ChatFurie.Middleware.Sockets
                             jObject["method"] = (int)NotificationType.Backway;
                             jObject["isStart"] = isStart;
                             jObject["users"] = string.Join(",", usersList);
-                            MessageSocketTransform.SendStringAsync(userSocket, jObject.ToString(), ct);
+                            if (!isStart)
+                                MessageSocketTransform.SendStringAsync(userSocket, jObject.ToString(), ct);
                         }
                         break;
                     }
