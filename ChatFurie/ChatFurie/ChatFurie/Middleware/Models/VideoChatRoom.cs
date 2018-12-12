@@ -21,6 +21,7 @@ namespace ChatFurie.Middleware.Models
     {
         private List<Client> Users { get; set; } = new List<Client>();
         public Client Creator { get; set; }
+        public int Conversation { get; set; }
         public Client AddUser(WebSocket ws, int id)
         {
             var client = new Client { Id = id, Socket = ws, IsActive = false };
@@ -31,6 +32,15 @@ namespace ChatFurie.Middleware.Models
         public void SetActive(int user)
         {
             Users.FirstOrDefault(x => x.Id == user).IsActive = true;
+            var userActives = Users.Where(x => x.IsActive);
+            if (userActives.Count() > 0)
+                foreach (var userActive in userActives)
+                {
+                    JObject jObject = new JObject();
+                    jObject["conversation"] = Conversation;
+                    jObject["method"] = (int)SocketHandler.NotificationType.RoomIsReady;
+                    MessageSocketTransform.SendStringAsync(userActive.Socket, jObject.ToString());
+                }
         }
 
         public void DeleteUser(int id)

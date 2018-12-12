@@ -6,6 +6,6 @@
     <div class="user-info contact-find-add" id="@obj.ID">
         <img id="@obj.ID" src="~/images/@obj.Image" class="img40" />
         <span id="@obj.ID">@Html.StringLengthValidate(obj.Name)</span>
-        <img id="@obj.ID" src="~/images/condition-on.jpg" class="img10" />
+        <img id="@obj.ID" src="~/images/@Html.GetUserCondition(obj.ID)" class="img10" />
     </div>
 }

@@ -172,6 +172,7 @@
         var isModalOpen = false;
         var isCurrentInput = false;
         var userInputTry = -1;
+        var conversationTry = -1;
 
 
         var protocol = location.protocol === "https:" ? "wss:" : "ws:";
@@ -232,13 +233,13 @@
                                 InputCall(data);
                                 break;
                             case 3:
-
                                 break;
                             case 4:
                                 break;
                             case 5:
                                 break;
                             case 6:
+                                EndCalling();
                                 break;
                         }
                     }
@@ -251,16 +252,24 @@
              toastr["error"](e.data);
         };
 
-        function EndCall() {
-            isCurrentInput = false;
-            $('#startCalling').css("display", "block");
-            $('#vision').html('');
-            $('#endCalling').css("display", "none");
-        }
-
         $('#declineCall-modal').click(function () {
             DeclineInput(userInputTry, true);
         });
+
+        $('#startCall-modal').click(function () {
+            var json = new Object();
+            isAccept = true;
+            var video = document.getElementById('video');
+        });
+
+
+        function EndCalling() {
+            isCurrentInput = false;
+            $('#vision').html('');
+            $(modalInputCall).modal('hide');
+            $('#endCalling').css("display", "none");
+            $('#startCalling').css("display", "block");
+        }
 
         function DeclineInput(userId, isCansel = false) {
             if (isCansel)
@@ -268,10 +277,10 @@
             isCurrentInput = false;
             var json = new Object();
             json["type"] = 'notification';
-            json["method"] = 3;
-            json["userIn"] = @userID;
-            json["userInput"] = userId;
-            json["isCansel"] = isCansel;
+            json["method"] = 5;
+            json["conversation"] = $(modalInputCallcontent).attr("name");
+            json["userDecliner"] = @userID;
+            json["userStart"] = userId;
             socket.send(JSON.stringify(json).toString());
         }
 
@@ -284,14 +293,6 @@
             json["userTo"] = userId;
             socket.send(JSON.stringify(json).toString());
         }
-
-        $('#startCall-modal').click(function () {
-            var json = new Object();
-            isAccept = true;
-            var video = document.getElementById('video');
-
-
-        });
 
         function SendAccept(conversation) {
             var json = new Object();
