@@ -27,22 +27,24 @@ namespace ChatFurie.Middleware.Sockets
 
         public static void DeleteUserFromChatRoom(int ws)
         {
-            foreach (var room in ChatRooms)
-                if (room.Value.IsUser(ws))
+            foreach (var room in ChatRooms.Where(x => x.Value.IsUserInRoom(ws)).ToList())
+            {
+                room.Value.DeleteUser(ws);
+                if (room.Value.NeedToDelete)
                 {
-                    room.Value.DeleteUser(ws);
-                    if (room.Value.Count == 0)
-                        ChatRooms.Remove(room.Key);
+                    room.Value.Deleting(default(CancellationToken));
+                    ChatRooms.Remove(room.Key);
                 }
+            }
         }
 
         public static void ValidateRoom(int conversation, CancellationToken ct)
         {
             if (ChatRooms.TryGetValue(conversation, out var room))
             {
-                if (room.NeedToDelete())
+                if (room.NeedToDelete)
                 {
-                    room.Deleting(conversation, ct);
+                    room.Deleting(ct);
                     ChatRooms.Remove(conversation);
                 }
             }
@@ -73,7 +75,7 @@ namespace ChatFurie.Middleware.Sockets
 
             CancellationToken ct = context.RequestAborted;
             WebSocket currentSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var response = await ReceiveStringAsync(currentSocket, ct);
+            var response = await ReceiveStringAsync(currentSocket, 0, ct);
             JObject jObject = JObject.Parse(response);
             int userId = jObject["user"].Value<int>();
 
@@ -86,7 +88,7 @@ namespace ChatFurie.Middleware.Sockets
                     break;
                 }
 
-                response = await ReceiveStringAsync(currentSocket, ct);
+                response = await ReceiveStringAsync(currentSocket, userId, ct);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (currentSocket.State != WebSocketState.Open)
@@ -106,7 +108,7 @@ namespace ChatFurie.Middleware.Sockets
                         SocketHandler.Messanger(method, jResponse, userId, ct);
                         break;
                     case "notification":
-                        SocketHandler.Notification(method, jResponse, userId, ct);
+                        SocketHandler.Notification(method, currentSocket, jResponse, userId, ct);
                         break;
                     case "video-message":
                         SocketHandler.VideoMessage(method, jResponse, userId, ct);
@@ -115,12 +117,14 @@ namespace ChatFurie.Middleware.Sockets
 
             }
 
+            DeleteUserFromChatRoom(userId);
             WebSocket dummy;
             _sockets.TryRemove(userId, out dummy);
-            DeleteUserFromChatRoom(userId);
             if (currentSocket.State == WebSocketState.Connecting || currentSocket.State == WebSocketState.Open)
+            {
                 await currentSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", ct);
-            currentSocket.Dispose();
+                currentSocket.Dispose();
+            }
         }
 
         public static Task SendStringAsync(WebSocket socket, string data, CancellationToken ct = default(CancellationToken))
@@ -130,33 +134,39 @@ namespace ChatFurie.Middleware.Sockets
             return socket.SendAsync(segment, WebSocketMessageType.Text, true, ct);
         }
 
-        private static async Task<string> ReceiveStringAsync(WebSocket socket, CancellationToken ct = default(CancellationToken))
+        private static async Task<string> ReceiveStringAsync(WebSocket socket, int userID, CancellationToken ct = default(CancellationToken))
         {
-            var buffer = new ArraySegment<byte>(new byte[8192]);
+            var buffer = new ArraySegment<byte>(new byte[32768]);
             using (var ms = new MemoryStream())
             {
-                WebSocketReceiveResult result;
-                do
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
+                    WebSocketReceiveResult result;
+                    do
+                    {
+                        ct.ThrowIfCancellationRequested();
 
-                    result = await socket.ReceiveAsync(buffer, ct);
-                    ms.Write(buffer.Array, buffer.Offset, result.Count);
+                        result = await socket.ReceiveAsync(buffer, ct);
+                        ms.Write(buffer.Array, buffer.Offset, result.Count);
+                    }
+                    while (!result.EndOfMessage);
+
+                    ms.Seek(0, SeekOrigin.Begin);
+                    if (result.MessageType != WebSocketMessageType.Text)
+                    {
+                        return null;
+                    }
+
+                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                    {
+                        return await reader.ReadToEndAsync();
+                    }
                 }
-                while (!result.EndOfMessage);
-
-                ms.Seek(0, SeekOrigin.Begin);
-                if (result.MessageType != WebSocketMessageType.Text)
+                catch (Exception ex)
                 {
-                    return null;
-                }
-
-                // Encoding UTF8: https://tools.ietf.org/html/rfc6455#section-5.6
-                using (var reader = new StreamReader(ms, Encoding.UTF8))
-                {
-                    return await reader.ReadToEndAsync();
                 }
             }
+            return null;
         }
     }
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ namespace ChatFurie.Middleware.Sockets
     {
         public enum NotificationType
         {
-            Common, Conversation, CallStart, CallEnd, CallAccess, CallDecline, Backway, RoomIsReady
+            Common, Conversation, CallStart, CallAccess, Stop, UserIdReady
         }
 
         public static ChatWCF.ChatService ChatService = new ChatWCF.ChatService();
@@ -42,7 +43,7 @@ namespace ChatFurie.Middleware.Sockets
             }
         }
 
-        public static void Notification(string method, JObject jObject, int userId, CancellationToken ct)
+        public static void Notification(string method, WebSocket userSocket, JObject jObject, int userId, CancellationToken ct)
         {
             switch ((NotificationType)Convert.ToInt32(method))
             {
@@ -57,67 +58,47 @@ namespace ChatFurie.Middleware.Sockets
                 case NotificationType.CallStart:
                     {
                         int conversation = jObject["conversation"].Value<int>();
-                        ChatWCF.Models.ChatContextWCF chatContextWCF = new ChatWCF.Models.ChatContextWCF();
-                        jObject["name"] = chatContextWCF.Conversation.Find(conversation).Name;
-                        var users = chatContextWCF.UserInConversation
-                            .Where(x => x.ConversationID == conversation && x.UserID != userId).Select(x => x.UserID);
-                        List<int> usersList = new List<int>();
-                        bool isStart = false;
-                        VideoChatRoom videoChatRoom = null;
-                        if (!MessageSocketTransform.ChatRooms.TryGetValue(conversation, out videoChatRoom))
+                        if (MessageSocketTransform.ChatRooms.TryGetValue(conversation, out var room))
                         {
-                            videoChatRoom = new VideoChatRoom() { Conversation = conversation };
-                            MessageSocketTransform.ChatRooms.Add(conversation, videoChatRoom);
+                            room.AddUser(userSocket, userId);
+                            room.SetActive(userId);
                         }
-                        foreach (var user in users)
-                            if (MessageSocketTransform.Sockets.TryGetValue(user, out var socket))
-                            {
-                                MessageSocketTransform.SendStringAsync(socket, jObject.ToString(), ct);
-                                isStart = true;
-                                usersList.Add(user);
-                                videoChatRoom.AddUser(socket, user);
-                            }
-                        if (MessageSocketTransform.Sockets.TryGetValue(userId, out var userSocket))
+                        else
                         {
-                            var client = videoChatRoom.AddUser(userSocket, userId);
-                            videoChatRoom.SetActive(userId);
-                            videoChatRoom.Creator = client;
-                            jObject["method"] = (int)NotificationType.Backway;
-                            jObject["isStart"] = isStart;
-                            jObject["users"] = string.Join(",", usersList);
-                            if (!isStart)
-                                MessageSocketTransform.SendStringAsync(userSocket, jObject.ToString(), ct);
+                            VideoChatRoom videoChat = new VideoChatRoom(conversation);
+                            videoChat.AddUser(userSocket, userId);
+                            videoChat.SetActive(userId);
+                            videoChat.StartVideoChat();
+                            if (videoChat.NeedToDelete)
+                                videoChat.Deleting(ct);
+                            else
+                                MessageSocketTransform.ChatRooms.Add(conversation, videoChat);
                         }
                         break;
                     }
-                case NotificationType.CallEnd:
+                case NotificationType.Stop:
                     {
                         int conversation = jObject["conversation"].Value<int>();
-                        int user = jObject["userStart"].Value<int>();
-                        int userFrom = jObject["userFrom"].Value<int>();
+                        int user = jObject["user"].Value<int>();
                         if (MessageSocketTransform.ChatRooms.TryGetValue(conversation, out var room))
-                            room.DeleteUser(userFrom);
-                        MessageSocketTransform.ValidateRoom(conversation, ct);
+                        {
+                            room.DeleteUser(user);
+                            if (room.NeedToDelete)
+                            {
+                                room.Deleting(ct);
+                                MessageSocketTransform.ChatRooms.Remove(conversation);
+                            }
+                        }
                         break;
                     }
                 case NotificationType.CallAccess:
                     {
                         int conversation = jObject["conversation"].Value<int>();
-                        int user = jObject["userStart"].Value<int>();
-                        int userFrom = jObject["userFrom"].Value<int>();
+                        int user = jObject["user"].Value<int>();
                         if (MessageSocketTransform.ChatRooms.TryGetValue(conversation, out var room))
-                            room.SetActive(userFrom);
+                            room.SetActive(user);
+                        break;
                     }
-                    break;
-                case NotificationType.CallDecline:
-                    {
-                        int conversation = jObject["conversation"].Value<int>();
-                        int user = jObject["userDecliner"].Value<int>();
-                        if (MessageSocketTransform.ChatRooms.TryGetValue(conversation, out var room))
-                            room.DeleteUser(user);
-                        MessageSocketTransform.ValidateRoom(conversation, ct);
-                    }
-                    break;
             }
         }
 
