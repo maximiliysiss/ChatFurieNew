@@ -155,7 +155,26 @@
         var modalInputCallcontent = $('#call-input-name');
 
         var messageBox = null;
-        var isAccept = false;
+
+        /* */
+
+        var isInputCall = false;
+        var inputCallConversation;
+
+        var videoChatBlock;
+        var visionBlock;
+        var videoCanvasBlock;
+
+        var openConvesation;
+        var activeDialogConversation;
+        var isActiveDialog = false;
+
+        var countUsersInActive;
+
+        var theRecorder;
+        var videoStream;
+
+        /* */
 
         $(modalWindow).on("hidden.bs.modal", function () { isModalOpen = false; });
         $(modalAddUser).on("hidden.bs.modal", function () {
@@ -164,29 +183,13 @@
         });
         $(modalChoice).on("hidden.bs.modal", function () { isModalOpen = false; });
         $(modalInputCall).on("hidden.bs.modal", function () {
-            isModalOpen = false;
-            if (!isAccept)
-                DeclineInput(userInputTry, true);
+            isInputCall = false;
+            if (!isActiveDialog)
+                DeclineCalling();
         });
 
         var isModalOpen = false;
-        var isCurrentInput = false;
-        var userInputTry = -1;
-        var conversationTry = -1;
-
-
-        var protocol = location.protocol === "https:" ? "wss:" : "ws:";
-        var wsUri = protocol + "//" + window.location.host;
-        var socket = new WebSocket(wsUri);
-        socket.onopen = e => {
-           var jsonStart = '{"user":"@userID"}';
-           socket.send(jsonStart);
-           console.log("socket opened", e);
-         };
-
-         socket.onclose = function (e) {
-             console.log("socket closed", e);
-         };
+       
 
         function createMessage(author, id, dateMsg, userMsg, contentMsg) {
             var newMsg = document.createElement("div");
@@ -207,8 +210,23 @@
             return newMsg;
         }
 
+        var socket;
 
-        socket.onmessage = function (e) {
+        function InitSocket() {
+             var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+             var wsUri = protocol + "//" + window.location.host;
+             socket = new WebSocket(wsUri);
+             socket.onopen = e => {
+               var jsonStart = '{"user":"@userID"}';
+               socket.send(jsonStart);
+               console.log("socket opened", e);
+             };
+
+            socket.onclose = function (e) {
+                console.log("socket closed", e);
+            };
+
+            socket.onmessage = function (e) {
             var data = JSON.parse(e.data);
             switch (data["type"]) {
                 case "messanger":
@@ -222,69 +240,206 @@
                     }
                     break;
                 case "notification":{
-                        switch (data["method"]) {
-                            case 0:
-                                LoadConversations();
-                                break;
-                            case 1:
-                                LoadNotifications();
-                                break;
-                            case 2:
-                                InputCall(data);
-                                break;
-                            case 3:
-                                break;
-                            case 4:
-                                break;
-                            case 5:
-                                break;
-                            case 6:
-                                EndCalling();
-                                break;
+                    switch (data["method"]) {
+                        case @((int)SocketHandler.NotificationType.Common):
+                            LoadNotifications();
+                            break;
+                        case @((int)SocketHandler.NotificationType.Conversation):
+                            LoadConversations();
+                            break;
+                        case @((int)SocketHandler.NotificationType.CallStart):
+                            InputCalling(data);
+                            break;
+                        case @((int)SocketHandler.NotificationType.Stop):
+                            StopCalling();
+                            StopStream();
+                            break;
+                        case @((int)SocketHandler.NotificationType.UserIdReady):
+                            VideoChatStart();
+                            break;
                         }
                     }
                     break;
-            }
-        };
+                case "video-message":
+                    {
+                        var user = data["user"];
+                        var video = CreateVideoForUser(user);
+                        var blob = new Blob([data["data"]], {
+                            type: 'video/webm'
+                        });
+                        var url = URL.createObjectURL(blob);
+                        video.src = url;
+                        //console.log("Input blot = " + blob.size);
+                        //var reader = new FileReader();
+                        //reader.readAsDataURL(blob);
+                        //reader.onload = function (e) {
+                        //    video.src = e.target.result;
+                        //};
+                    }
+                    break;
+                }
+            };
 
-         socket.onerror = function (e) {
-             console.error(e.data);
-             toastr["error"](e.data);
-        };
+            socket.onerror = function (e) {
+                console.error(e.data);
+                toastr["error"](e.data);
+            };
+        }
+
+        InitSocket();
+
+
+        /* */
+
+        function CreateVideoForUser(userId) {
+            var video = $("#video" + userId);
+            var sizeX = $(videoChatBlock).width();
+            var sizeY = $(videoChatBlock).height();
+            if (!video.length) {
+                video = document.createElement("video");
+                video.setAttribute("autoplay", "true");
+                video.setAttribute("id", "video" + userId);
+                video.width = sizeX / 3;
+                $(videoChatBlock).append(video);
+            }
+            return video;
+        }
 
         $('#declineCall-modal').click(function () {
-            DeclineInput(userInputTry, true);
+            DeclineCalling();
         });
 
         $('#startCall-modal').click(function () {
-            var json = new Object();
-            isAccept = true;
-            var video = document.getElementById('video');
+            AcceptCalling();
         });
 
-
-        function EndCalling() {
-            isCurrentInput = false;
-            $('#vision').html('');
-            $(modalInputCall).modal('hide');
-            $('#endCalling').css("display", "none");
-            $('#startCalling').css("display", "block");
+        function StopStream() {
+            if (videoStream)
+                for (var i = 0; i < videoStream.getTracks().length; i++)
+                    videoStream.getTracks()[i].stop();
         }
 
-        function DeclineInput(userId, isCansel = false) {
-            if (isCansel)
-                $(modalInputCall).modal('hide');
-            isCurrentInput = false;
+        function StopCalling(isStarter = false) {
+            isInputCall = false;
+            isActiveDialog = false;
+            $(modalInputCall).modal("hide");
+            if ($(visionBlock).css("display") !== "none") {
+                SwitchVideo();
+            }
+            if ($("#endCalling-cont").css("display") !== "none") {
+                SwitchMode();
+            }
+            $(videoChatBlock).html("");
+        }
+
+        function InputCalling(data) {
+            if (isInputCall || isActiveDialog) {
+                var json = new Object();
+                json["conversation"] = data["conversation"];
+                json["user"] = @userID;
+                json["type"] = "notification";
+                json["method"] = @((int)SocketHandler.NotificationType.Stop);
+                socket.send(JSON.stringify(json).toString());
+                return;
+            }
+            isInputCall = true;
+            inputCallConversation = data["conversation"];
+            $(modalInputCallcontent).html(data["name"]);
+            $(modalInputCall).modal("show");
+            isModalOpen = true;
+        }
+
+        function VideoChatStart() {
+            if ($(visionBlock).css("display") !== "none") {
+                SwitchVideo();
+            }
+            if (!$("#video" +@userID).length) {
+                StartStream();
+            }
+        }
+
+        function StartCalling() {
             var json = new Object();
-            json["type"] = 'notification';
-            json["method"] = 5;
-            json["conversation"] = $(modalInputCallcontent).attr("name");
-            json["userDecliner"] = @userID;
-            json["userStart"] = userId;
+            json["conversation"] = openConvesation;
+            json["type"] = "notification";
+            json["method"] = @((int)SocketHandler.NotificationType.CallStart);
             socket.send(JSON.stringify(json).toString());
         }
 
 
+        function StartStream() {
+            var video = CreateVideoForUser(@userID);
+            if (navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(function (stream) {
+                        videoStream = stream;
+                        video.srcObject = videoStream;
+
+                        var jsonPattern = new Object();
+                        jsonPattern["type"] = "video-message";
+                        jsonPattern["user"] = @userID;
+                        jsonPattern["conversation"] = activeDialogConversation;
+                        jsonPattern["method"] = 0;
+
+                        var frames = [];
+                        recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+                        recorder.ondataavailable =
+                            event => {
+                                var reader = new FileReader();
+                                reader.onload = function (event) {
+                                    jsonPattern["data"] = reader.result;
+                                    socket.send(JSON.stringify(jsonPattern).toString());
+                                };
+                                reader.readAsText(event.data);                               
+                            };
+                        recorder.start(1000);
+                    })
+                    .catch(function (err) {
+                        alert("Something went wrong! " + err);
+                    });
+            }
+
+        }
+
+        function AcceptCalling() {
+            var json = new Object();
+            json["type"] = "notification";
+            json["method"] = @((int)SocketHandler.NotificationType.CallAccess);
+            json["user"] = @userID;
+            json["conversation"] = inputCallConversation;
+            socket.send(JSON.stringify(json).toString());
+            OpenConversation(inputCallConversation, true);
+        }
+
+        function DeclineCalling(isAdmin = false) {
+            var json = new Object();
+            json["conversation"] = isAdmin ? openConvesation : inputCallConversation;
+            json["user"] = @userID;
+            json["type"] = "notification";
+            json["method"] = @((int)SocketHandler.NotificationType.Stop);
+            socket.send(JSON.stringify(json).toString());
+            StopCalling();
+        }
+
+        function ToggleVisibility(obj, convert = "flex") {
+            if ($(obj).css("display") === "none") {
+                $(obj).css("display", convert);
+            } else {
+                $(obj).css("display", "none");
+            }
+        }
+
+        function SwitchVideo() {
+            ToggleVisibility(visionBlock);
+            ToggleVisibility(videoChatBlock);
+        }
+
+        function SwitchMode() {
+            ToggleVisibility($("#startCalling-cont"));
+            ToggleVisibility($("#endCalling-cont"));
+        }
+
+        /* */
 
         function SendNotification(userId, notifType) {
             var json = new Object();
@@ -292,36 +447,6 @@
             json["method"] = notifType;
             json["userTo"] = userId;
             socket.send(JSON.stringify(json).toString());
-        }
-
-        function SendAccept(conversation) {
-            var json = new Object();
-            json["type"] = 'notification';
-            json["method"] = 5;
-            json["conversation"] = conversation;
-            json["user"] = @userID;
-            socket.send(JSON.stringify(json).toString());
-        }
-
-        function StartCall(conversationId) {
-            var json = new Object();
-            json["type"] = 'notification';
-            json["method"] = 2;
-            json["conversation"] = conversationId;
-            json["user"] = @userID;
-            socket.send(JSON.stringify(json).toString());
-            isModalOpen = true;
-        }
-
-        function InputCall(data) {
-            if (isCurrentInput) {
-                DeclineInput(data["userStart"], true);
-            }
-            $(modalInputCallcontent).html(data["name"]);
-            $(modalInputCallcontent).attr('name', data['conversation']);
-            $(modalInputCall).modal("show");
-            userInputTry = data["userStart"];
-            isCurrentInput = true;
         }
 
         var isActive;
@@ -521,12 +646,15 @@
                 });
         }
 
-        function OpenConversation(id) {
+        function OpenConversation(id, isStartDialog = false) {
             AjaxPost({ "user": "@userID", "conversation": id }, "@Url.Action("OpenConversation", "Home")",
                 function (e) {
-
+                    openConvesation = id;
                     $("#s-column").html(e);
                     /// Realize
+
+                    videoChatBlock = document.querySelector("#video-chat");
+                    visionBlock = document.querySelector("#vision");
 
                     messageBox = $('#message-box');
                     $(messageBox).scrollTop($(messageBox).prop('scrollHeight'));
@@ -549,11 +677,21 @@
                         AddUserToCoversation(this);
                     });
 
-                    $('#startCalling').click(function () {
-                        $(this).css("display", "none");
-                        $('#endCalling').css("display", "block");
-                        StartCall($(this).attr("name"));
-                        $('#vision').html('<img style="height:100%" src="/images/phone_calling.gif"/>');
+                    $("#startCalling").click(function (event) {
+                        activeDialogConversation = openConvesation;
+                        event.stopPropagation();
+                        SwitchMode();
+                        SwitchVideo();
+                        StartCalling();
+                    });
+
+                    $("#endCalling").click(function (event) {
+                        event.stopPropagation();
+                        SwitchMode();
+                        SwitchVideo();
+                        DeclineCalling(true);
+
+                        CreateVideoForUser(@userID).srcObject = null;
                     });
 
                     $('#msg-input').keypress(function (e) {
@@ -574,6 +712,14 @@
                             });
                         });
                     });
+
+                    if (isStartDialog) {
+                        StopCalling();
+                        SwitchMode();
+                        isActiveDialog = true;
+                        activeDialogConversation = inputCallConversation;
+                        StartStream();
+                    }
                 });
         }
 

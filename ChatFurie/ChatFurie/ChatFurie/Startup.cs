@@ -37,6 +37,12 @@ namespace ChatFurie
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+                options.HttpsPort = 5001;
+            });
+
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(option =>
             {
                 option.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
