@@ -104,6 +104,7 @@ namespace ChatFurie.Middleware.Sockets
 
         public static void VideoMessage(string method, JObject jObject, int userId, CancellationToken ct)
         {
+            Console.WriteLine($"Input from user {userId}: {jObject["data"].Value<string>().Length}");
             int conversation = jObject["conversation"].Value<int>();
             if (MessageSocketTransform.ChatRooms.TryGetValue(conversation, out var room))
                 room.VideoChat(jObject, ct, userId);

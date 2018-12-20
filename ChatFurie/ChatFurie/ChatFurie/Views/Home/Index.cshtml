@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Home Page";
 }
 @{
@@ -255,7 +255,7 @@
                             StopStream();
                             break;
                         case @((int)SocketHandler.NotificationType.UserIdReady):
-                            VideoChatStart();
+                            VideoChatStart(data["conversation"]);
                             break;
                         }
                     }
@@ -263,18 +263,8 @@
                 case "video-message":
                     {
                         var user = data["user"];
-                        var video = CreateVideoForUser(user);
-                        var blob = new Blob([data["data"]], {
-                            type: 'video/webm'
-                        });
-                        var url = URL.createObjectURL(blob);
-                        video.src = url;
-                        //console.log("Input blot = " + blob.size);
-                        //var reader = new FileReader();
-                        //reader.readAsDataURL(blob);
-                        //reader.onload = function (e) {
-                        //    video.src = e.target.result;
-                        //};
+                        var video = CreateCanvasForUser(user);
+                        video.src = data["data"];
                     }
                     break;
                 }
@@ -290,6 +280,19 @@
 
 
         /* */
+        function CreateCanvasForUser(userId) {
+            var video = document.getElementById("video" + userId);
+            var sizeX = $(videoChatBlock).width();
+            if (!$(video).length) {
+                video = document.createElement("img");
+                video.id = "video" + userId;
+                video.width = sizeX / 3;
+                video.height = sizeX / 4;
+                $(videoChatBlock).append(video);
+            }
+            return video;
+        }
+
 
         function CreateVideoForUser(userId) {
             var video = $("#video" + userId);
@@ -317,11 +320,13 @@
             if (videoStream)
                 for (var i = 0; i < videoStream.getTracks().length; i++)
                     videoStream.getTracks()[i].stop();
+            videoStream = null;
+            clearInterval(theRecorder);
+            isActiveDialog = false;
         }
 
         function StopCalling(isStarter = false) {
             isInputCall = false;
-            isActiveDialog = false;
             $(modalInputCall).modal("hide");
             if ($(visionBlock).css("display") !== "none") {
                 SwitchVideo();
@@ -349,13 +354,15 @@
             isModalOpen = true;
         }
 
-        function VideoChatStart() {
+        function VideoChatStart(conversation) {
             if ($(visionBlock).css("display") !== "none") {
                 SwitchVideo();
             }
             if (!$("#video" +@userID).length) {
                 StartStream();
             }
+            isActiveDialog = true;
+            activeDialogConversation = conversation;
         }
 
         function StartCalling() {
@@ -367,32 +374,67 @@
         }
 
 
+        var frameCompressWidth = 200;
+        var frameCompressHeight = 150;
+
+        function GetCurrentFrame(video) {
+            var canvas = document.createElement("canvas");
+            canvas.height = frameCompressHeight;
+            canvas.width = frameCompressWidth;
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, frameCompressWidth, frameCompressHeight);
+            return canvas.toDataURL();
+        }
+
+        function b64toBlob(b64Data, contentType, sliceSize) {
+            contentType = contentType || '';
+            sliceSize = sliceSize || 512;
+
+            var byteCharacters = atob(b64Data);
+            var byteArrays = [];
+
+            for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+                var byteNumbers = new Array(slice.length);
+                for (var i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+
+                var byteArray = new Uint8Array(byteNumbers);
+
+                byteArrays.push(byteArray);
+            }
+
+            var blob = new Blob(byteArrays, { type: contentType });
+            return blob;
+        }
+
         function StartStream() {
             var video = CreateVideoForUser(@userID);
+            var jsonPattern = new Object();
+            jsonPattern["type"] = "video-message";
+            jsonPattern["user"] = @userID;
+            jsonPattern["conversation"] = activeDialogConversation;
+            jsonPattern["method"] = 0;
             if (navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                navigator.mediaDevices.getUserMedia({ video: true })
                     .then(function (stream) {
                         videoStream = stream;
                         video.srcObject = videoStream;
 
-                        var jsonPattern = new Object();
-                        jsonPattern["type"] = "video-message";
-                        jsonPattern["user"] = @userID;
-                        jsonPattern["conversation"] = activeDialogConversation;
-                        jsonPattern["method"] = 0;
+                        theRecorder = setInterval(function () {
+                            var frame = GetCurrentFrame(video);
+                            jsonPattern["data"] = frame;
+                            socket.send(JSON.stringify(jsonPattern).toString());
 
-                        var frames = [];
-                        recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-                        recorder.ondataavailable =
-                            event => {
-                                var reader = new FileReader();
-                                reader.onload = function (event) {
-                                    jsonPattern["data"] = reader.result;
-                                    socket.send(JSON.stringify(jsonPattern).toString());
-                                };
-                                reader.readAsText(event.data);                               
-                            };
-                        recorder.start(1000);
+                            //var a = document.createElement("a");
+                            //document.body.appendChild(a);
+                            //a.style = "display: none";
+                            //a.href = frame;
+                            //a.download = 'test.png';
+                            //a.click();
+                        }, 100);
                     })
                     .catch(function (err) {
                         alert("Something went wrong! " + err);
@@ -690,8 +732,7 @@
                         SwitchMode();
                         SwitchVideo();
                         DeclineCalling(true);
-
-                        CreateVideoForUser(@userID).srcObject = null;
+                        StopStream();
                     });
 
                     $('#msg-input').keypress(function (e) {
@@ -711,13 +752,15 @@
                                 LoadConversations();
                             });
                         });
-                    });
+                    });     
 
-                    if (isStartDialog) {
+                    if (isStartDialog || (isActiveDialog && activeDialogConversation.toString() === openConvesation.toString())) {
                         StopCalling();
                         SwitchMode();
                         isActiveDialog = true;
-                        activeDialogConversation = inputCallConversation;
+                        activeDialogConversation = openConvesation;
+                        if (!isStartDialog)
+                            StopStream();
                         StartStream();
                     }
                 });
@@ -756,6 +799,20 @@
             data: data,
             method: "POST",
             success: success,
+            error: function (jqXHR, textStatus, errorThrown) {
+                toastr["error"](jqXHR.responseText);
+            }
+        });
+    }
+
+    function AjaxPostForm(data, url) {
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: data,
+            cache: false,
+            processData: false,
+            contentType: false,
             error: function (jqXHR, textStatus, errorThrown) {
                 toastr["error"](jqXHR.responseText);
             }
