@@ -136,7 +136,7 @@ namespace ChatFurie.Middleware.Sockets
 
         private static async Task<string> ReceiveStringAsync(WebSocket socket, int userID, CancellationToken ct = default(CancellationToken))
         {
-            var buffer = new ArraySegment<byte>(new byte[32768]);
+            var buffer = new ArraySegment<byte>(new byte[512000]);
             using (var ms = new MemoryStream())
             {
                 try
@@ -145,7 +145,6 @@ namespace ChatFurie.Middleware.Sockets
                     do
                     {
                         ct.ThrowIfCancellationRequested();
-
                         result = await socket.ReceiveAsync(buffer, ct);
                         ms.Write(buffer.Array, buffer.Offset, result.Count);
                     }
