@@ -71,7 +71,7 @@ namespace ChatWCF
             var userTo = ChatContextWCF.Users.Find(friend);
             ChatContextWCF.AddFriendNotifications.Add(new Models.AddFriendNotification()
             {
-                Context = $"{userFrom.Name} want add you to friend",
+                Context = $"{userFrom.Name} wants to add you as a friend",
                 DateTime = DateTime.Now,
                 UserFrom = userFrom,
                 UserTo = userTo

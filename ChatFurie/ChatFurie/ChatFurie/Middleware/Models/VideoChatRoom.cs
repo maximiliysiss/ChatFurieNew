@@ -9,15 +9,6 @@ using System.Threading.Tasks;
 
 namespace ChatFurie.Middleware.Models
 {
-    public class Client
-    {
-        public WebSocket Socket { get; set; }
-        public int Id { get; set; }
-        public bool IsActive { get; set; }
-        public bool InChat { get; set; }
-    }
-
-
     public class VideoChatRoom
     {
         public VideoChatRoom(int conversation)
@@ -63,7 +54,7 @@ namespace ChatFurie.Middleware.Models
             jObject["type"] = "notification";
             jObject["user"] = user;
             jObject["method"] = (int)SocketHandler.NotificationType.UserIdReady;
-            foreach (var userActive in Users.Where(x => x.IsActive && !x.InChat))
+            foreach (var userActive in Users.Where(x => x.IsActive))
                 MessageSocketTransform.SendStringAsync(userActive.Socket, jObject.ToString());
             Users.FirstOrDefault(x => x.Id == user).IsActive = true;
         }
