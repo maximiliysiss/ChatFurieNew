@@ -262,9 +262,11 @@
                     break;
                 case "video-message":
                     {
-                        var user = data["user"];
-                        var video = CreateCanvasForUser(user);
-                        video.src = data["data"];
+                        if (isActiveDialog) {
+                            var user = data["user"];
+                            var video = CreateCanvasForUser(user);
+                            video.src = data["data"];
+                        }
                     }
                     break;
                 }
@@ -327,6 +329,7 @@
 
         function StopCalling(isStarter = false) {
             isInputCall = false;
+            isActiveDialog = false;
             $(modalInputCall).modal("hide");
             if ($(visionBlock).css("display") !== "none") {
                 SwitchVideo();
