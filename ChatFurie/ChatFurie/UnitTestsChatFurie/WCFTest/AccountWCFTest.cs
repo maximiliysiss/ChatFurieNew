@@ -9,8 +9,14 @@ using Xunit;
 
 namespace UnitTestsChatFurie.ControllerTests
 {
+    /// <summary>
+    /// Класс тестирования системы регистрации и авторизации
+    /// </summary>
     public class AccountWCFTest : IDisposable
     {
+        /// <summary>
+        /// Модель регистрации
+        /// </summary>
         readonly RegisterModel registerModel = new RegisterModel
         {
             Birthday = DateTime.MinValue,
@@ -19,6 +25,9 @@ namespace UnitTestsChatFurie.ControllerTests
             ConfirmedPassword = "123456Qw!"
         };
 
+        /// <summary>
+        /// Метод очистки после выполнения теста
+        /// </summary>
         public void Dispose()
         {
             ChatWCF.Models.ChatContextWCF chatContextWCF = new ChatWCF.Models.ChatContextWCF();
@@ -26,6 +35,9 @@ namespace UnitTestsChatFurie.ControllerTests
             chatContextWCF.SaveChanges();
         }
 
+        /// <summary>
+        /// Первый тест, проверяющий регистрацию
+        /// </summary>
         [Fact]
         public void RegisterTest()
         {
@@ -34,6 +46,9 @@ namespace UnitTestsChatFurie.ControllerTests
             Assert.Equal(ResultCode.Success, resultCode.Status);
         }
 
+        /// <summary>
+        /// Второй тест проверяющий авторизацию
+        /// </summary>
         [Fact]
         public void LoginTest()
         {

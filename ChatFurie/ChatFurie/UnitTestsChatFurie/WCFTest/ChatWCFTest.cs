@@ -9,10 +9,19 @@ using Xunit;
 
 namespace UnitTestsChatFurie.WCFTest
 {
+    /// <summary>
+    /// Класс для тестирования Чата
+    /// </summary>
     public class ChatWCFTest : IDisposable
     {
+        /// <summary>
+        /// Id пользователей системы
+        /// </summary>
         public int u1, u2;
 
+        /// <summary>
+        /// Создание пользователей через сервиса Auth
+        /// </summary>
         public ChatWCFTest()
         {
             AuthServiceWCF.AuthService authService = new AuthServiceWCF.AuthService();
@@ -32,6 +41,9 @@ namespace UnitTestsChatFurie.WCFTest
             }) as RegisterActionResult).Id);
         }
 
+        /// <summary>
+        /// Проверка на добавление в друзья
+        /// </summary>
         [Fact]
         public void AddFriend()
         {
@@ -44,6 +56,9 @@ namespace UnitTestsChatFurie.WCFTest
             chatService.DeclineFriend(u2, notifications.ID);
         }
 
+        /// <summary>
+        /// Проверка на поиск человека
+        /// </summary>
         [Fact]
         public void FindingUsers()
         {
@@ -53,7 +68,9 @@ namespace UnitTestsChatFurie.WCFTest
             Assert.Equal(u2, user.ID);
         }
 
-
+        /// <summary>
+        /// Удаление после тестирования
+        /// </summary>
         public void Dispose()
         {
             AuthServiceWCF.Models.ChatContext chatContext = new AuthServiceWCF.Models.ChatContext();
